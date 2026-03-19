@@ -113,8 +113,8 @@ export default function RootLayout({
             <DashboardTourGate />
             <AgentChatPanel />
             <ChatNotificationToast />
-            {!isHosted && <OpenClawUpdateBanner />}
-            {!isHosted && <MissionControlUpdateBanner />}
+            <OpenClawUpdateBanner />
+            <MissionControlUpdateBanner />
             <UsageAlertMonitor />
             <ToastRenderer />
           </SetupGate>
