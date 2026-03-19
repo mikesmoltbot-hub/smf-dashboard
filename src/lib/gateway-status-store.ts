@@ -94,8 +94,13 @@ async function pollLite() {
       offlineConsecutiveFailures = 0;
     }
   } catch {
-    setSnapshot({ status: "offline", health: null, latencyMs: null });
-    if (fastPollCount === 0) switchToOfflinePolling();
+    offlineConsecutiveFailures++;
+    if (offlineConsecutiveFailures >= 2) {
+      setSnapshot({ status: "offline", health: null, latencyMs: null });
+      if (fastPollCount === 0) switchToOfflinePolling();
+    } else {
+      setSnapshot({ status: "degraded", health: null, latencyMs: null });
+    }
   } finally {
     liteInFlight = false;
   }

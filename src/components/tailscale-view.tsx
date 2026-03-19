@@ -77,15 +77,17 @@ export function TailscaleView() {
     resetOnExit !== loadedResetOnExit ||
     allowTailscaleAuth !== loadedAllowTailscaleAuth;
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (signal?: AbortSignal) => {
     setLoading(true);
     setError(null);
     try {
       const [configRes, gatewayRes, tailscaleRes] = await Promise.all([
-        fetch("/api/config", { cache: "no-store" }),
-        fetch("/api/gateway", { cache: "no-store" }).catch(() => null),
-        fetch("/api/tailscale", { cache: "no-store" }).catch(() => null),
+        fetch("/api/config", { cache: "no-store", signal }),
+        fetch("/api/gateway", { cache: "no-store", signal }).catch(() => null),
+        fetch("/api/tailscale", { cache: "no-store", signal }).catch(() => null),
       ]);
+
+      if (signal?.aborted) return;
 
       if (!configRes.ok) {
         const data = await configRes.json().catch(() => ({}));
@@ -133,7 +135,9 @@ export function TailscaleView() {
   }, []);
 
   useEffect(() => {
-    void load();
+    const controller = new AbortController();
+    void load(controller.signal);
+    return () => controller.abort();
   }, [load]);
 
   const restartGateway = useCallback(async () => {
