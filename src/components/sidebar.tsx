@@ -54,6 +54,7 @@ type NavItem = {
   comingSoon?: boolean;
   beta?: boolean;
   group?: string;
+  external?: boolean;
 };
 
 const isAgentbayHosting = process.env.NEXT_PUBLIC_AGENTBAY_HOSTED === "true";
@@ -71,6 +72,7 @@ const defaultNavItems: NavItem[] = [
   { section: "sessions", label: "Sessions", icon: MessageSquare, href: "/sessions" },
   // ── Work ──
   { group: "Work", section: "tasks", label: "Tasks", icon: ListChecks, href: "/tasks" },
+  ...(!isAgentbayHosting ? [{ section: "business-central", label: "SMF Business Central", icon: LayoutDashboard, href: "http://localhost:5174", external: true } as NavItem] : []),
   ...(!isAgentbayHosting ? [{ section: "calendar", label: "Calendar", icon: Calendar, href: "/calendar", beta: true } as NavItem] : []),
   ...(!isAgentbayHosting ? [{ section: "integrations", label: "Integrations", icon: Puzzle, href: "/integrations", beta: true } as NavItem] : []),
   { section: "cron", label: "Cron Jobs", icon: Clock, href: "/cron" },
@@ -361,6 +363,24 @@ function SidebarNav({ onNavigate, collapsed }: { onNavigate?: () => void; collap
                     />
                   </button>
                 </div>
+              ) : item.external ? (
+                <a
+                  href={item.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={linkClass}
+                  title={collapsed ? item.label : undefined}
+                >
+                  <span className="relative inline-flex shrink-0">
+                    <Icon className="h-3 w-3" />
+                  </span>
+                  {!collapsed && <span className="flex-1">{item.label}</span>}
+                  {!collapsed && item.beta && (
+                    <span className="shrink-0 rounded-sm bg-stone-100 px-1.5 py-0.5 font-mono text-xs font-semibold uppercase tracking-wider text-stone-400 dark:bg-[#1c2128] dark:text-[#5a6270]">
+                      beta
+                    </span>
+                  )}
+                </a>
               ) : (
                 <Link
                   href={item.href || `/${item.section}`}
