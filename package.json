@@ -22,7 +22,7 @@
     "openclaw-dashboard": "./bin/cli.mjs"
   },
   "scripts": {
-    "dev": "next dev -H 127.0.0.1 -p 3000 --webpack",
+    "dev": "next dev -H 127.0.0.1 -p 3000",
     "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint",

@@ -4,14 +4,14 @@ import type { NextConfig } from "next";
 
 function git(cmd: string): string {
   try {
-    return execSync(`git ${cmd}`, { encoding: "utf-8", timeout: 5000 }).trim();
+    return execSync(`git ${cmd}`, { encoding: "utf-8", timeout: 2000 }).trim();
   } catch {
     return "";
   }
 }
 
 const nextConfig: NextConfig = {
-  turbopack: {},
+  // Removed turbopack - using webpack for stability
   env: {
     NEXT_PUBLIC_APP_VERSION: git("describe --tags --always") || "dev",
     NEXT_PUBLIC_COMMIT_HASH: git("rev-parse --short HEAD") || "unknown",
