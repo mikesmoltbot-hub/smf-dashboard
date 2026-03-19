@@ -10,7 +10,7 @@ import { ChatNotificationToast } from "@/components/chat-notification-toast";
 import { SetupGate } from "@/components/setup-gate";
 import { UsageAlertMonitor } from "@/components/usage-alert-monitor";
 import { OpenClawUpdateBanner } from "@/components/openclaw-update-banner";
-import { DashboardUpdateBanner } from "@/components/dashboard-update-banner";
+import { MissionControlUpdateBanner } from "@/components/mission-control-update-banner";
 import { CliModeBanner } from "@/components/cli-mode-banner";
 import { ToastRenderer } from "@/components/toast-renderer";
 import { DashboardTourGate } from "@/components/dashboard-tour-gate";
