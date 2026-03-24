@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState, useCallback, useSyncExternalStore, useRef } from "react";
 import { cn } from "@/lib/utils";
+import { useDashboard } from "@/contexts/DashboardContext";
 import {
   Activity,
   LayoutDashboard,
@@ -431,6 +432,8 @@ function SidebarNav({ onNavigate, collapsed }: { onNavigate?: () => void; collap
 }
 
 export function Sidebar() {
+  const { settings } = useDashboard();
+  const branding = settings.branding;
   const [mobileOpen, setMobileOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(() => {
     if (typeof window === "undefined") return false;
@@ -565,15 +568,23 @@ export function Sidebar() {
         <div className={cn("shrink-0", collapsed ? "px-2 pb-2" : "px-3 pb-3 pt-3")}>
           {collapsed ? (
             <div className="flex flex-col items-center gap-2">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-base shadow-sm ring-1 ring-stone-200 dark:bg-[#171a1d] dark:ring-[#2c343d]">
-                🎯
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-base shadow-sm ring-1 ring-stone-200 dark:bg-[#171a1d] dark:ring-[#2c343d] overflow-hidden">
+                {branding.logo ? (
+                  <img src={branding.logo} alt="Logo" className="h-full w-full object-contain" />
+                ) : (
+                  <span className="text-lg">🎯</span>
+                )}
               </div>
             </div>
           ) : (
             <div className="space-y-3">
               <div className="flex items-center gap-2">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-base shadow-sm ring-1 ring-stone-200 dark:bg-[#171a1d] dark:ring-[#2c343d]">
-                  🎯
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-base shadow-sm ring-1 ring-stone-200 dark:bg-[#171a1d] dark:ring-[#2c343d] overflow-hidden">
+                  {branding.logo ? (
+                    <img src={branding.logo} alt="Logo" className="h-full w-full object-contain" />
+                  ) : (
+                    <span className="text-lg">🎯</span>
+                  )}
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-2">
