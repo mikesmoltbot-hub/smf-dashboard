@@ -101,7 +101,7 @@ export function GatewaySelector() {
           <div className="fixed inset-0 z-40" onClick={() => { setOpen(false); setEditing(false); }} />
 
           {/* Panel */}
-          <div className="absolute right-0 top-full mt-2 z-50 w-80 rounded-xl border border-[var(--border)] bg-[var(--bg-card)] shadow-xl">
+          <div className="absolute left-auto right-0 top-full mt-2 z-50 w-80 rounded-xl border border-[var(--border)] bg-[var(--bg-card)] shadow-xl">
             <div className="p-3 border-b border-[var(--border)]">
               <h3 className="text-sm font-semibold text-[var(--text-primary)]">Gateway Connections</h3>
             </div>
