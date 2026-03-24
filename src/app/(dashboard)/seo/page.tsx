@@ -1,28 +1,28 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Search, TrendingUp, FileText, Share2, ArrowRight } from "lucide-react";
+import { Search, Sparkles, TrendingUp, FileText, ArrowRight } from "lucide-react";
 
 const features = [
   {
     icon: Search,
-    title: "Keyword Research",
-    description: "Discover high-value keywords with search volume and competition data",
+    title: "Traditional SEO",
+    description: "Meta tags, headers, keywords, and site structure optimization",
+  },
+  {
+    icon: Sparkles,
+    title: "GEO Optimization",
+    description: "Optimize for AI search engines (ChatGPT, Perplexity, Gemini, Claude)",
   },
   {
     icon: TrendingUp,
-    title: "GEO Optimization",
-    description: "Optimize for Generative Engine Optimization (ChatGPT, Perplexity, Gemini)",
+    title: "Performance Tracking",
+    description: "Monitor rankings and AI citation rates over time",
   },
   {
     icon: FileText,
     title: "Content Analysis",
-    description: "Get actionable recommendations to improve your content ranking",
-  },
-  {
-    icon: Share2,
-    title: "Multi-Platform",
-    description: "Optimize content for Google, Bing, and AI search engines simultaneously",
+    description: "Real-time content scoring for SEO and GEO fit",
   },
 ];
 
@@ -46,7 +46,7 @@ export default function SEOPage() {
             </span>
           </div>
           <p className="text-[var(--text-muted)]">
-            Search engine and generative engine optimization for maximum visibility.
+            Optimize your content for both traditional search engines and AI platforms.
           </p>
         </div>
 
@@ -59,7 +59,7 @@ export default function SEOPage() {
             Coming Soon
           </h2>
           <p className="mx-auto mb-8 max-w-md text-[var(--text-muted)]">
-            SEO + GEO is currently under development. Optimize for both traditional search and AI-powered search.
+            SEO + GEO is currently under development. Get ahead of the competition by preparing your content for AI-powered search.
           </p>
 
           {/* Feature Preview */}
@@ -81,11 +81,11 @@ export default function SEOPage() {
           {/* CTA */}
           <div className="mt-8 flex justify-center gap-4">
             <button className="flex items-center gap-2 rounded-lg bg-[var(--smf-primary)] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[var(--smf-primary)]/90">
-              <TrendingUp className="h-4 w-4" />
-              Get Early Access
+              <Sparkles className="h-4 w-4" />
+              Join Waitlist
             </button>
             <button className="flex items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--bg-secondary)] px-4 py-2 text-sm font-medium text-[var(--text-secondary)] transition-colors hover:border-[var(--smf-primary)]">
-              View Documentation
+              Learn About GEO
               <ArrowRight className="h-4 w-4" />
             </button>
           </div>
