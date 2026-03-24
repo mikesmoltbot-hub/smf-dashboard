@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useDashboard } from "@/contexts/DashboardContext";
 import { Globe, ChevronDown, Plus, X, Check, Loader2 } from "lucide-react";
 
@@ -19,6 +19,20 @@ export function GatewaySelector() {
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState<{ ok: boolean; message: string } | null>(null);
   const [form, setForm] = useState({ name: "", url: "", token: "" });
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close on outside click
+  useEffect(() => {
+    if (!open) return;
+    const handleClick = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setOpen(false);
+        setEditing(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [open]);
 
   // Load gateways from localStorage or use default
   const gateways: GatewayEntry[] = [
@@ -97,11 +111,12 @@ export function GatewaySelector() {
       {/* Dropdown */}
       {open && (
         <>
-          {/* Backdrop */}
-          <div className="fixed inset-0 z-40" onClick={() => { setOpen(false); setEditing(false); }} />
-
           {/* Panel */}
-          <div className="absolute left-auto right-0 top-full mt-2 z-50 w-80 rounded-xl border border-[var(--border)] bg-[var(--bg-card)] shadow-xl">
+          <div
+            ref={dropdownRef}
+            className="fixed z-50 w-80 rounded-xl border border-[var(--border)] bg-[var(--bg-card)] shadow-xl"
+            style={{ top: "52px", right: "16px" }}
+          >
             <div className="p-3 border-b border-[var(--border)]">
               <h3 className="text-sm font-semibold text-[var(--text-primary)]">Gateway Connections</h3>
             </div>
