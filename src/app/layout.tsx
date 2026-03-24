@@ -14,6 +14,7 @@ import { MissionControlUpdateBanner } from "@/components/mission-control-update-
 import { CliModeBanner } from "@/components/cli-mode-banner";
 import { ToastRenderer } from "@/components/toast-renderer";
 import { DashboardTourGate } from "@/components/dashboard-tour-gate";
+import { DashboardProvider } from "@/contexts/DashboardContext";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -95,29 +96,31 @@ export default function RootLayout({
         className={`${inter.variable} ${geistMono.variable} antialiased`}
       >
         <ThemeProvider>
-          <SetupGate>
-            <KeyboardShortcuts />
-            <div className="flex h-screen overflow-hidden bg-stone-50 text-stone-900 dark:bg-[#101214] dark:text-stone-100">
-              <Sidebar />
-              <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-                <Header />
-                <CliModeBanner />
-                <main
-                  data-tour="main-content"
-                  className="flex flex-1 overflow-hidden bg-stone-50 dark:bg-[#101214]"
-                >
-                  {children}
-                </main>
+          <DashboardProvider>
+            <SetupGate>
+              <KeyboardShortcuts />
+              <div className="flex h-screen overflow-hidden bg-stone-50 text-stone-900 dark:bg-[#101214] dark:text-stone-100">
+                <Sidebar />
+                <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+                  <Header />
+                  <CliModeBanner />
+                  <main
+                    data-tour="main-content"
+                    className="flex flex-1 overflow-hidden bg-stone-50 dark:bg-[#101214]"
+                  >
+                    {children}
+                  </main>
+                </div>
               </div>
-            </div>
-            <DashboardTourGate />
-            <AgentChatPanel />
-            <ChatNotificationToast />
-            <OpenClawUpdateBanner />
-            <MissionControlUpdateBanner />
-            <UsageAlertMonitor />
-            <ToastRenderer />
-          </SetupGate>
+              <DashboardTourGate />
+              <AgentChatPanel />
+              <ChatNotificationToast />
+              <OpenClawUpdateBanner />
+              <MissionControlUpdateBanner />
+              <UsageAlertMonitor />
+              <ToastRenderer />
+            </SetupGate>
+          </DashboardProvider>
         </ThemeProvider>
       </body>
     </html>

@@ -57,6 +57,14 @@
 :root {
   --radius: 0.5rem;
 
+  /* SMF Dashboard custom tokens (can be overridden per-branding) */
+  --smf-primary: #6366f1;
+  --smf-accent: #a855f7;
+  --smf-pro: #f59e0b;
+  --smf-success: #22c55e;
+  --smf-warning: #f59e0b;
+  --smf-danger: #ef4444;
+
   /* Core backgrounds */
   --background: #fafaf9;
   --foreground: #1c1917;
@@ -122,6 +130,16 @@
   --text-tertiary: #78716c;
   --text-quaternary: #a8a29e;
   --text-placeholder: #a8a29e;
+
+  /* SMF aliases for component use */
+  --bg-primary: var(--background);
+  --bg-secondary: var(--secondary);
+  --bg-card: var(--card);
+  --bg-hover: var(--accent);
+  --text-primary: var(--foreground);
+  --text-secondary: var(--muted-foreground);
+  --text-muted: #78716c;
+  --border: var(--border);
   --legacy-accent-text-strong: color-mix(in srgb, var(--foreground) 100%, transparent);
   --legacy-accent-text: color-mix(in srgb, var(--foreground) 84%, transparent);
   --legacy-accent-text-muted: color-mix(in srgb, var(--foreground) 70%, transparent);
@@ -182,6 +200,14 @@
 
 /* ── Dark mode ──────────────────────────────────── */
 .dark {
+  /* SMF Dashboard custom tokens */
+  --smf-primary: #6366f1;
+  --smf-accent: #a855f7;
+  --smf-pro: #f59e0b;
+  --smf-success: #22c55e;
+  --smf-warning: #f59e0b;
+  --smf-danger: #ef4444;
+
   --background: #101214;
   --foreground: #f5f7fa;
   --card: #171a1d;
@@ -207,6 +233,15 @@
   --chart-5: #fca5a5;
   --chart-grid: rgba(245, 247, 250, 0.08);
   --chart-tick: rgba(245, 247, 250, 0.62);
+
+  /* SMF aliases for dark mode */
+  --bg-primary: var(--background);
+  --bg-secondary: var(--secondary);
+  --bg-card: var(--card);
+  --bg-hover: var(--accent);
+  --text-primary: var(--foreground);
+  --text-secondary: var(--muted-foreground);
+  --text-muted: #5c6378;
   --chart-tick-muted: rgba(245, 247, 250, 0.44);
   --chart-text: rgba(245, 247, 250, 0.86);
   --chart-muted: #4b5560;
