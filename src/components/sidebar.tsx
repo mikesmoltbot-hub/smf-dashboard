@@ -41,6 +41,8 @@ import {
   HelpCircle,
   Puzzle,
   Radio,
+  FileText,
+  Target,
 } from "lucide-react";
 import { getChatUnreadCount, subscribeChatStore } from "@/lib/chat-store";
 
@@ -63,41 +65,53 @@ const defaultNavItems: NavItem[] = [
   // ── Overview ──
   { group: "Overview", section: "dashboard", label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
   { section: "activity", label: "Activity", icon: Activity, href: "/activity" },
-  { section: "usage", label: "Usage", icon: BarChart3, href: "/usage" },
+  { section: "usage", label: "Usage & Costs", icon: BarChart3, href: "/usage" },
+
   // ── Agents ──
-  { group: "Agents", section: "agents", label: "Agents", icon: Users, href: "/agents" },
+  { group: "Agents", section: "agents", label: "All Agents", icon: Users, href: "/agents" },
   { section: "agents", label: "Subagents", icon: Users2, href: "/agents?tab=subagents", tab: "subagents", isSubItem: true },
   { section: "agents", label: "Models", icon: Cpu, href: "/agents?tab=models", tab: "models", isSubItem: true },
   { section: "chat", label: "Chat", icon: MessageCircle, href: "/chat" },
   { section: "sessions", label: "Sessions", icon: MessageSquare, href: "/sessions" },
-  // ── Work ──
-  { group: "Work", section: "tasks", label: "Tasks", icon: ListChecks, href: "/tasks" },
-  ...(!isAgentbayHosting ? [{ section: "business-central", label: "SMF Business Central", icon: LayoutDashboard, href: "http://localhost:5174", external: true } as NavItem] : []),
+
+  // ── Business ──
+  { group: "Business", section: "tasks", label: "Tasks", icon: ListChecks, href: "/tasks" },
+  ...(!isAgentbayHosting ? [{ section: "business-central", label: "Business Central", icon: LayoutDashboard, href: "http://localhost:5174", external: true } as NavItem] : []),
   ...(!isAgentbayHosting ? [{ section: "calendar", label: "Calendar", icon: Calendar, href: "/calendar", beta: true } as NavItem] : []),
   ...(!isAgentbayHosting ? [{ section: "integrations", label: "Integrations", icon: Puzzle, href: "/integrations", beta: true } as NavItem] : []),
   { section: "cron", label: "Cron Jobs", icon: Clock, href: "/cron" },
   { section: "cron", label: "Heartbeat", icon: Heart, href: "/heartbeat", tab: "heartbeat", isSubItem: true },
-  { section: "skills", label: "Skills", icon: Wrench, href: "/skills" },
+
+  // ── Plugins ──
+  { group: "Plugins", section: "cms", label: "Simple CMS", icon: FileText, href: "/cms", beta: true },
+  { section: "leads", label: "Lead Capture", icon: Target, href: "/leads", beta: true },
+  { section: "seo", label: "SEO + GEO", icon: Search, href: "/seo", beta: true },
+
+  // ── Skills ──
+  { group: "Skills", section: "skills", label: "Skills Explorer", icon: Wrench, href: "/skills" },
   { section: "skills", label: "ClawHub", icon: Package, href: "/skills?tab=clawhub", tab: "clawhub", isSubItem: true },
+
   // ── Knowledge ──
   { group: "Knowledge", section: "memory", label: "Memory", icon: Brain, href: "/memory" },
   { section: "docs", label: "Documents", icon: FolderOpen, href: "/documents" },
   { section: "vectors", label: "Vector DB", icon: Database, href: "/vectors" },
-  // ── Configure ──
-  { section: "accounts", label: "API Keys", icon: KeyRound, href: "/accounts" },
-  { section: "channels", label: "Channels", icon: Radio, href: "/channels" },
-  { section: "security", label: "Security", icon: ShieldCheck, href: "/security" },
-  { section: "hooks", label: "Hooks", icon: Webhook, href: "/hooks" },
-  { section: "settings", label: "Preferences", icon: Settings2, href: "/settings" },
+
   // ── System ──
-  ...(!isAgentbayHosting ? [{ section: "doctor", label: "Doctor", icon: Stethoscope, href: "/doctor", group: "System", beta: true } as NavItem] : []),
-  { group: isAgentbayHosting ? "System" : undefined, section: "terminal", label: "Terminal", icon: SquareTerminal, href: "/terminal" },
-  { section: "logs", label: "Logs", icon: Terminal, href: "/logs" },
+  { group: "System", section: "logs", label: "Logs", icon: Terminal, href: "/logs" },
+  ...(!isAgentbayHosting ? [{ section: "terminal", label: "Terminal", icon: SquareTerminal, href: "/terminal" } as NavItem] : []),
   { section: "browser", label: "Browser Relay", icon: Globe, href: "/browser" },
   { section: "audio", label: "Audio & Voice", icon: Volume2, href: "/audio" },
   { section: "search", label: "Web Search", icon: Search, href: "/search" },
   ...(!isAgentbayHosting ? [{ section: "tailscale", label: "Tailscale", icon: Waypoints, href: "/tailscale", beta: true } as NavItem] : []),
+  ...(!isAgentbayHosting ? [{ section: "doctor", label: "Doctor", icon: Stethoscope, href: "/doctor", beta: true } as NavItem] : []),
   { section: "config", label: "Config", icon: Settings, href: "/config" },
+
+  // ── Configure ──
+  { group: "Configure", section: "accounts", label: "API Keys", icon: KeyRound, href: "/accounts" },
+  { section: "channels", label: "Channels", icon: Radio, href: "/channels" },
+  { section: "security", label: "Security", icon: ShieldCheck, href: "/security" },
+  { section: "hooks", label: "Hooks", icon: Webhook, href: "/hooks" },
+  { section: "settings", label: "Settings", icon: Settings2, href: "/settings" },
 ];
 
 const hostedNavItems: NavItem[] = [
@@ -111,7 +125,7 @@ const hostedNavItems: NavItem[] = [
   // ── Overview ──
   { group: "Overview", section: "dashboard", label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
   { section: "activity", label: "Activity", icon: Activity, href: "/activity" },
-  { section: "usage", label: "Usage", icon: BarChart3, href: "/usage" },
+  { section: "usage", label: "Usage & Costs", icon: BarChart3, href: "/usage" },
   // ── Agents ──
   { group: "Agents", section: "agents", label: "Agents", icon: Users, href: "/agents" },
   { section: "agents", label: "Models", icon: Cpu, href: "/agents?tab=models", tab: "models", isSubItem: true },

@@ -25,6 +25,8 @@ import {
   Activity,
   MessageSquare,
   Trash2,
+  Bell,
+  Settings,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SearchModal } from "./search-modal";
@@ -694,102 +696,83 @@ export function Header() {
 
   return (
     <>
-      <header className="flex shrink-0 items-center justify-between border-b border-stone-200 bg-stone-50 px-4 py-2 text-xs md:px-8 dark:border-[#23282e] dark:bg-[#121519]">
-        <div className="flex items-center gap-2 ml-11 md:ml-0">
-          <GatewayStatusBadge status={gwStatus} health={gwHealth} latencyMs={gwLatencyMs} />
+      {/* Greeting */}
+      <div className="flex items-center gap-3">
+        <div>
+          <h1 className="text-base font-semibold text-[var(--text-primary)]">
+            Good Morning, Michael
+          </h1>
+          <p className="text-xs text-[var(--text-muted)]">
+            {new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}
+          </p>
         </div>
+      </div>
 
-        <div className="flex items-center gap-2">
-          {/* ── Actions ── */}
+      {/* Right - Actions */}
+      <div className="flex items-center gap-2">
+        {/* Search */}
+        <button
+          type="button"
+          onClick={() => setSearchOpen(true)}
+          className="flex h-9 items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--bg-card)] px-3 text-sm text-[var(--text-muted)] transition-colors hover:border-[var(--smf-primary)]"
+        >
+          <Search className="h-4 w-4" />
+          <span className="hidden sm:inline">Search...</span>
+          <kbd className="ml-2 hidden rounded bg-[var(--bg-hover)] px-1.5 py-0.5 text-xs text-[var(--text-muted)] sm:inline">
+            ⌘K
+          </kbd>
+        </button>
 
-          {/* Ping Agent (opens persistent chat panel) */}
+        {/* Notifications */}
+        <button
+          type="button"
+          className="relative flex h-9 w-9 items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--bg-card)] text-[var(--text-secondary)] transition-colors hover:border-[var(--smf-primary)]"
+        >
+          <Bell className="h-4 w-4" />
+          <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-[var(--smf-danger)] text-[10px] font-bold text-white">
+            3
+          </span>
+        </button>
+
+        {/* Settings */}
+        <button
+          type="button"
+          onClick={() => window.location.href = "/settings"}
+          className="flex h-9 items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--bg-card)] px-3 text-sm text-[var(--text-secondary)] transition-colors hover:border-[var(--smf-primary)]"
+        >
+          <Settings className="h-4 w-4" />
+          <span className="hidden sm:inline">Settings</span>
+        </button>
+
+        {/* Gateway power toggle */}
+        <div className="group relative">
           <button
             type="button"
-            data-chat-toggle
-            onClick={() => chatStore.toggle()}
-            className={cn(
-              "relative flex h-8 items-center gap-1.5 rounded-md border border-stone-200 bg-white px-2.5 text-xs font-medium text-stone-600 transition-colors hover:bg-stone-100 hover:text-stone-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:border-[#2c343d] dark:bg-[#171a1d] dark:text-[#d6dce3] dark:hover:bg-[#20252a] dark:hover:text-[#f5f7fa]",
-              chat.open
-                ? "border-stone-300 bg-stone-100 text-stone-900 dark:border-[#38414b] dark:bg-[#20252a] dark:text-[#f5f7fa]"
-                : ""
-            )}
-          >
-            <Zap className="h-3 w-3" />
-            <span className="hidden md:inline">Ping Agent</span>
-            {chat.unread > 0 && !chat.open && (
-              <span className="absolute -right-0.5 -top-0.5 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-stone-900 px-0.5 text-xs font-bold leading-none text-white shadow-lg dark:bg-stone-100 dark:text-stone-900">
-                {chat.unread}
-              </span>
-            )}
-            {chat.sending && !chat.open && (
-              <span className="inline-flex items-center gap-0.5">
-                <span className="h-1 w-1 animate-bounce rounded-full bg-primary [animation-delay:0ms]" />
-                <span className="h-1 w-1 animate-bounce rounded-full bg-primary [animation-delay:150ms]" />
-                <span className="h-1 w-1 animate-bounce rounded-full bg-primary [animation-delay:300ms]" />
-              </span>
-            )}
-          </button>
-
-          {/* Search */}
-          <button
-            type="button"
-            onClick={() => setSearchOpen(true)}
-            className="flex h-8 items-center gap-1.5 rounded-md border border-stone-200 bg-white px-2.5 text-xs font-medium text-stone-600 transition-colors hover:bg-stone-100 hover:text-stone-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:border-[#2c343d] dark:bg-[#171a1d] dark:text-[#d6dce3] dark:hover:bg-[#20252a] dark:hover:text-[#f5f7fa]"
-          >
-            <Search className="h-3 w-3" />
-            <span className="hidden sm:inline">Search</span>
-            <kbd className="ml-1 hidden rounded bg-stone-100 px-1 py-0.5 text-xs text-stone-400 sm:inline dark:bg-stone-700 dark:text-stone-500">
-              ⌘K
-            </kbd>
-          </button>
-
-          {/* ── System controls ── */}
-
-          {/* Gateway power toggle */}
-          <div className="group relative">
-            <button
-              type="button"
-              onClick={() => {
-                if (isAlive) {
-                  if (window.confirm("Stop the gateway? All running agents and sessions will be interrupted.")) {
-                    togglePower();
-                  }
-                } else {
+            onClick={() => {
+              if (isAlive) {
+                if (window.confirm("Stop the gateway?")) {
                   togglePower();
                 }
-              }}
-              disabled={powerBusy}
-              className={cn(
-                "flex h-8 items-center gap-1.5 rounded-md px-2.5 text-xs font-medium transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                isAlive
-                  ? "border border-red-300 bg-red-500 text-white hover:bg-red-600"
-                  : "border border-emerald-300 bg-emerald-500 text-white hover:bg-emerald-600"
-              )}
-            >
-              {powerBusy ? (
-                <span className="inline-flex items-center gap-0.5">
-                  <span className="h-1 w-1 animate-bounce rounded-full bg-current [animation-delay:0ms]" />
-                  <span className="h-1 w-1 animate-bounce rounded-full bg-current [animation-delay:150ms]" />
-                  <span className="h-1 w-1 animate-bounce rounded-full bg-current [animation-delay:300ms]" />
-                </span>
-              ) : (
-                <Power className="h-3 w-3" />
-              )}
-              <span className="hidden sm:inline">{isAlive ? "Kill" : "Start"}</span>
-            </button>
-            <div className="pointer-events-none absolute left-1/2 top-full mt-1.5 -translate-x-1/2 whitespace-nowrap rounded border border-border bg-popover px-2 py-1 text-xs text-muted-foreground opacity-0 shadow-sm transition-opacity group-hover:opacity-100">
-              {isAlive ? "Emergency stop — kill the gateway" : "Start the gateway"}
-            </div>
-          </div>
-
-          <NotificationCenter />
-
-          {/* ── Settings ── */}
-
-          {/* Theme Toggle */}
-          <ThemeToggle />
+              } else {
+                togglePower();
+              }
+            }}
+            disabled={powerBusy}
+            className={cn(
+              "flex h-9 items-center gap-1.5 rounded-lg px-3 text-sm font-medium transition-colors",
+              isAlive
+                ? "border border-red-500/50 bg-red-500/10 text-red-400 hover:bg-red-500/20"
+                : "border border-emerald-500/50 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20"
+            )}
+          >
+            {powerBusy ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Power className="h-4 w-4" />
+            )}
+          </button>
         </div>
-      </header>
+      </div>
 
       <Suspense fallback={null}>
         <SearchModal open={searchOpen} onClose={() => setSearchOpen(false)} />
