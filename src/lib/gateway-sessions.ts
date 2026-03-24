@@ -1,4 +1,5 @@
 import { gatewayCall } from "@/lib/openclaw";
+import { gatewayCallRemote } from "@/lib/gateway-config";
 
 export type GatewaySession = {
   key?: string | null;
@@ -132,8 +133,10 @@ function normalizeGatewaySession(
   };
 }
 
-export async function fetchGatewaySessions(timeout = 12000): Promise<NormalizedGatewaySession[]> {
-  const data = await gatewayCall<SessionsListResult>("sessions.list", undefined, timeout);
+export async function fetchGatewaySessions(timeout = 12000, gatewayUrl?: string): Promise<NormalizedGatewaySession[]> {
+  const data = gatewayUrl
+    ? await gatewayCallRemote<SessionsListResult>("sessions.list", gatewayUrl, undefined, timeout)
+    : await gatewayCall<SessionsListResult>("sessions.list", undefined, timeout);
   const now = Date.now();
   const raw = Array.isArray(data.sessions) ? data.sessions : [];
   return raw

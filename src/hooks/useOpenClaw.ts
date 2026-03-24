@@ -100,11 +100,33 @@ export interface UseOpenClawReturn {
 // API Helper
 // ─────────────────────────────────────────────────────────────────────────────
 
-async function apiRequest<T>(endpoint: string): Promise<T | null> {
+function getGatewayConfig(): { gatewayUrl: string; gatewayToken?: string } {
+  // Dynamic import to avoid circular deps, read from window.location
+  if (typeof window === "undefined") {
+    return { gatewayUrl: "http://127.0.0.1:18789" };
+  }
   try {
-    const res = await fetch(endpoint, {
+    const stored = localStorage.getItem("smf-dashboard-settings");
+    if (stored) {
+      const settings = JSON.parse(stored);
+      const gwId = settings.currentGateway || "local";
+      if (gwId !== "local" && settings.gateways) {
+        const gw = settings.gateways.find((g: { id: string }) => g.id === gwId);
+        if (gw) return { gatewayUrl: gw.url, gatewayToken: gw.token };
+      }
+    }
+  } catch { /* ignore */ }
+  return { gatewayUrl: "http://127.0.0.1:18789" };
+}
+
+async function apiRequest<T>(endpoint: string, gatewayUrl?: string, gatewayToken?: string): Promise<T | null> {
+  try {
+    const headers: Record<string, string> = {
       credentials: "include",
-    });
+    } as Record<string, string>;
+    if (gatewayUrl) headers["x-gateway-url"] = gatewayUrl;
+    if (gatewayToken) headers["x-gateway-token"] = gatewayToken;
+    const res = await fetch(endpoint, { credentials: "include", headers });
     if (!res.ok) return null;
     return res.json();
   } catch {
@@ -154,7 +176,8 @@ export function useOpenClaw(): UseOpenClawReturn {
 
   // Check gateway status via Next.js API
   const checkStatus = useCallback(async () => {
-    const data = await apiRequest<{ status: string; health?: { ok?: boolean; version?: string } }>("/api/gateway");
+    const { gatewayUrl, gatewayToken } = getGatewayConfig();
+    const data = await apiRequest<{ status: string; health?: { ok?: boolean; version?: string } }>("/api/gateway", gatewayUrl, gatewayToken);
     if (data?.status === "online" || data?.health?.ok) {
       setStatus({
         online: true,
@@ -168,7 +191,8 @@ export function useOpenClaw(): UseOpenClawReturn {
 
   // Fetch agents from the rich /api/agents endpoint
   const refreshAgents = useCallback(async () => {
-    const data = await apiRequest<{ agents?: OpenClawAgent[]; defaultModel?: string }>("/api/agents");
+    const { gatewayUrl, gatewayToken } = getGatewayConfig();
+    const data = await apiRequest<{ agents?: OpenClawAgent[]; defaultModel?: string }>("/api/agents", gatewayUrl, gatewayToken);
     if (data?.agents) {
       setAgents(data.agents);
     } else {
@@ -197,6 +221,7 @@ export function useOpenClaw(): UseOpenClawReturn {
   // Fetch usage from real API
   const refreshUsage = useCallback(async () => {
     try {
+      const { gatewayUrl, gatewayToken } = getGatewayConfig();
       const data = await apiRequest<{
         providers?: Array<{
           currentMonthUsd?: number;
@@ -205,7 +230,7 @@ export function useOpenClaw(): UseOpenClawReturn {
         totals?: {
           currentMonthUsd?: number;
         };
-      }>("/api/usage");
+      }>("/api/usage", gatewayUrl, gatewayToken);
       if (data) {
         // Sum from all providers
         let monthly = 0;

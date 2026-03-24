@@ -9,7 +9,17 @@ import {
   patchConfig as applyConfigPatchWithRetry,
   fetchConfig,
   extractBindings,
+  gatewayCallRemote,
 } from "@/lib/gateway-config";
+
+
+// ── Gateway URL from request header ──────────────────────────────────────────
+function getRemoteGatewayFromRequest(request: Request): { url: string; token?: string } | null {
+  const url = request.headers.get("x-gateway-url") || undefined;
+  const token = request.headers.get("x-gateway-token") || undefined;
+  if (!url) return null;
+  return { url, token: token || undefined };
+}
 
 const OPENCLAW_HOME = getOpenClawHome();
 export const dynamic = "force-dynamic";
@@ -301,9 +311,13 @@ function buildSyntheticMainAgent(
  * Rich agent discovery — configured agents are the source of truth.
  * Runtime sessions enrich known agents, but do not create new rows.
  */
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    // Support multi-gateway: read target gateway URL from request headers
+    const gatewayUrl = (request.headers.get("x-gateway-url") || undefined) as string | undefined;
     const now = Date.now();
+    const remote = getRemoteGatewayFromRequest(request);
+
     if (agentsCache && now < agentsCache.expiresAt) {
       return NextResponse.json(agentsCache.payload);
     }
@@ -311,7 +325,7 @@ export async function GET() {
     // 1. Get config via gateway RPC (replaces both CLI agents list and file read)
     let configData: Awaited<ReturnType<typeof fetchConfig>> | null = null;
     try {
-      configData = await fetchConfig(10000);
+      configData = await fetchConfig(10000, remote?.url);
     } catch {
       // Gateway might not be available — fall back to file
     }
@@ -412,11 +426,13 @@ export async function GET() {
     });
 
     // Use gateway RPC for channel status (replaces CLI "channels status --probe")
-    const channelStatusRaw = await gatewayCallWithRetry<Record<string, unknown>>(
-      "channels.status",
-      {},
-      12000,
-    ).catch(() => ({}));
+    const channelStatusRaw = remote
+      ? (await gatewayCallRemote<Record<string, unknown>>("channels.status", remote.url, {}, 12000, remote.token).catch(() => ({})))
+      : await gatewayCallWithRetry<Record<string, unknown>>(
+          "channels.status",
+          {},
+          12000,
+        ).catch(() => ({}));
     const connectedChannels = connectedChannelsFromStatus(channelStatusRaw);
 
     // Build a lookup from merged config list.
@@ -452,7 +468,7 @@ export async function GET() {
       AgentFull["runtimeSubagents"]
     >();
     try {
-      gatewaySessions = await fetchGatewaySessions(10000);
+      gatewaySessions = await fetchGatewaySessions(10000, remote?.url);
       sessionsByAgent = summarizeSessionsByAgent(gatewaySessions);
 
       const now = Date.now();
@@ -678,6 +694,7 @@ export async function POST(request: NextRequest) {
     // Invalidate GET cache for any mutation action.
     agentsCache = null;
 
+    const remote = getRemoteGatewayFromRequest(request);
     const body = await request.json();
     const action = body.action as string;
 
@@ -708,17 +725,13 @@ export async function POST(request: NextRequest) {
             return await createAgentViaCli(body as Record<string, unknown>);
           }
 
-          const result = await gatewayCallWithRetry<Record<string, unknown>>(
-            "agents.create",
-            { name, workspace },
-            30000,
-          );
+          const result = remote
+            ? await gatewayCallRemote<Record<string, unknown>>("agents.create", remote.url, { name, workspace }, 30000, remote.token)
+            : await gatewayCallWithRetry<Record<string, unknown>>("agents.create", { name, workspace }, 30000);
 
-          const configData = await gatewayCallWithRetry<Record<string, unknown>>(
-            "config.get",
-            undefined,
-            10000,
-          );
+          const configData = await (remote
+            ? gatewayCallRemote<Record<string, unknown>>("config.get", remote.url, undefined, 10000, remote.token)
+            : gatewayCallWithRetry<Record<string, unknown>>("config.get", undefined, 10000));
           const parsed = asRecord(configData.parsed);
           const agentsSection = asRecord(parsed.agents);
           const agentsList = cloneConfigRows(agentsSection.list);
@@ -1055,11 +1068,9 @@ export async function POST(request: NextRequest) {
         }
 
         try {
-          const result = await gatewayCallWithRetry<Record<string, unknown>>(
-            "agents.delete",
-            { agentId: id },
-            30000,
-          );
+          const result = remote
+            ? await gatewayCallRemote<Record<string, unknown>>("agents.delete", remote.url, { agentId: id }, 30000, remote.token)
+            : await gatewayCallWithRetry<Record<string, unknown>>("agents.delete", { agentId: id }, 30000);
           return NextResponse.json({ ok: true, action, id, ...result });
         } catch (error) {
           console.warn("Agent delete: gateway delete failed, falling back to CLI", error);

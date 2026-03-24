@@ -44,7 +44,16 @@ export async function gatewayCall<T>(
   method: string,
   params?: Record<string, unknown>,
   timeout = 15000,
+  gatewayUrl?: string,
+  gatewayToken?: string,
 ): Promise<T> {
+  // If a remote gateway URL is provided, create an HttpTransport directly
+  // (bypasses the singleton so concurrent requests don't clobber each other)
+  if (gatewayUrl) {
+    const { HttpTransport } = await import("./transports/http-transport");
+    const transport = new HttpTransport(gatewayUrl, gatewayToken);
+    return transport.gatewayRpc<T>(method, params, timeout);
+  }
   const client = await getClient();
   return client.gatewayRpc<T>(method, params, timeout);
 }

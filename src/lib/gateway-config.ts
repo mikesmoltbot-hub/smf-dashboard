@@ -7,6 +7,7 @@
  */
 
 import { gatewayCall, runCliCaptureBoth } from "./openclaw";
+import { getGateway } from "./request-gateway";
 import { getOpenClawHome } from "./paths";
 import { readFile, writeFile } from "fs/promises";
 import { join } from "path";
@@ -175,11 +176,14 @@ export async function gatewayCallWithRetry<T>(
   params?: Record<string, unknown>,
   timeout = 15000,
   maxAttempts = 3,
+  gatewayUrl?: string,
 ): Promise<T> {
   let lastError: unknown = null;
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
-      return await gatewayCall<T>(method, params, timeout);
+      const ctx = getGateway();
+      const gwUrl = gatewayUrl || ctx?.gatewayUrl;
+      return await gatewayCall<T>(method, params, timeout, gwUrl);
     } catch (error) {
       lastError = error;
       if (attempt === maxAttempts) {
@@ -224,12 +228,14 @@ export type BindingEntry = {
 
 // ── Typed config.get wrapper ─────────────────────
 
-export async function fetchConfig(timeout = 10000): Promise<ConfigData> {
-  const raw = await gatewayCallWithRetry<Record<string, unknown>>(
-    "config.get",
-    undefined,
-    timeout,
-  );
+export async function fetchConfig(timeout = 10000, gatewayUrl?: string): Promise<ConfigData> {
+  const raw = gatewayUrl
+    ? await gatewayCallRemote<Record<string, unknown>>("config.get", gatewayUrl, undefined, timeout)
+    : await gatewayCallWithRetry<Record<string, unknown>>(
+        "config.get",
+        undefined,
+        timeout,
+      );
   return {
     parsed: isRecord(raw.parsed) ? raw.parsed : {},
     resolved: isRecord(raw.resolved) ? raw.resolved : {},
@@ -331,4 +337,41 @@ export function extractBindings(configData: ConfigData): BindingEntry[] {
       },
     };
   }) as BindingEntry[];
+}
+
+// ── Direct remote gateway call (bypasses transport layer) ─────────────────────
+export async function gatewayCallRemote<T>(
+  method: string,
+  gatewayUrl: string,
+  params?: Record<string, unknown>,
+  timeout = 15000,
+  token?: string,
+): Promise<T> {
+  const url = `${gatewayUrl.replace(/\/$/, "")}/tools/invoke`;
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeout);
+
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ method, params: params || {} }),
+      signal: controller.signal,
+      credentials: "include",
+    });
+
+    if (!res.ok) {
+      throw new Error(`Gateway HTTP ${res.status}: ${await res.text()}`);
+    }
+
+    const data = await res.json();
+    return data as T;
+  } finally {
+    clearTimeout(timer);
+  }
 }
