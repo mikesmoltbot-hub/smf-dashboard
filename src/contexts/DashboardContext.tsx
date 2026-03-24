@@ -26,11 +26,20 @@ export interface PluginConfig {
   order: number;
 }
 
+export interface GatewayEntry {
+  id: string;
+  name: string;
+  url: string;
+  token?: string;
+}
+
 export interface DashboardSettings {
   branding: BrandingSettings;
   theme: DashboardTheme;
   plugins: PluginConfig[];
   setupComplete: boolean;
+  gateways: GatewayEntry[];
+  currentGateway: string;
 }
 
 export interface DashboardContextValue {
@@ -87,6 +96,8 @@ const DEFAULT_SETTINGS: DashboardSettings = {
   theme: DEFAULT_THEME,
   plugins: DEFAULT_PLUGINS,
   setupComplete: false,
+  gateways: [],
+  currentGateway: "local",
 };
 
 // ─────────────────────────────────────────────────────────────────────────────

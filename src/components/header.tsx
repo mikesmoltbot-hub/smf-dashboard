@@ -32,6 +32,7 @@ import { cn } from "@/lib/utils";
 import { SearchModal } from "./search-modal";
 import { NotificationCenter } from "./notification-center";
 import { ThemeToggle } from "./theme-toggle";
+import { GatewaySelector } from "@/components/settings/gateway-selector";
 import { chatStore, type ChatMessage } from "@/lib/chat-store";
 import {
   notifyGatewayRestarting as notifyGatewayRestartingStore,
@@ -722,6 +723,9 @@ export function Header() {
             ⌘K
           </kbd>
         </button>
+
+        {/* Gateway Selector */}
+        <GatewaySelector />
 
         {/* Notifications */}
         <button
