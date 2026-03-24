@@ -93,6 +93,7 @@ export interface UseOpenClawReturn {
   refreshCronJobs: () => Promise<void>;
   refreshSkills: () => Promise<void>;
   refreshAll: () => Promise<void>;
+  refreshUsage: () => Promise<void>;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -148,8 +149,8 @@ export function useOpenClaw(): UseOpenClawReturn {
   const [sessions, setSessions] = useState<OpenClawSession[]>([]);
   const [cronJobs, setCronJobs] = useState<OpenClawCronJob[]>([]);
   const [skills, setSkills] = useState<OpenClawSkill[]>([]);
-  const [todaySpend] = useState(2.47);
-  const [monthSpend] = useState(47.23);
+  const [todaySpend, setTodaySpend] = useState(0);
+  const [monthSpend, setMonthSpend] = useState(0);
 
   // Check gateway status via Next.js API
   const checkStatus = useCallback(async () => {
@@ -193,11 +194,44 @@ export function useOpenClaw(): UseOpenClawReturn {
     setSkills(MOCK_SKILLS);
   }, []);
 
+  // Fetch usage from real API
+  const refreshUsage = useCallback(async () => {
+    try {
+      const data = await apiRequest<{
+        providers?: Array<{
+          currentMonthUsd?: number;
+          todayUsd?: number;
+        }>;
+        totals?: {
+          currentMonthUsd?: number;
+        };
+      }>("/api/usage");
+      if (data) {
+        // Sum from all providers
+        let monthly = 0;
+        let daily = 0;
+        if (data.providers) {
+          for (const p of data.providers) {
+            monthly += p.currentMonthUsd || 0;
+            daily += p.todayUsd || 0;
+          }
+        }
+        if (data.totals?.currentMonthUsd) {
+          monthly = data.totals.currentMonthUsd;
+        }
+        setMonthSpend(monthly);
+        setTodaySpend(daily);
+      }
+    } catch {
+      // Keep zeros on error
+    }
+  }, []);
+
   // Refresh all
   const refreshAll = useCallback(async () => {
     await checkStatus();
-    await Promise.all([refreshAgents(), refreshSessions(), refreshCronJobs(), refreshSkills()]);
-  }, [checkStatus, refreshAgents, refreshSessions, refreshCronJobs, refreshSkills]);
+    await Promise.all([refreshAgents(), refreshSessions(), refreshCronJobs(), refreshSkills(), refreshUsage()]);
+  }, [checkStatus, refreshAgents, refreshSessions, refreshCronJobs, refreshSkills, refreshUsage]);
 
   // Initial load
   useEffect(() => {
@@ -218,6 +252,7 @@ export function useOpenClaw(): UseOpenClawReturn {
     refreshSessions,
     refreshCronJobs,
     refreshSkills,
+    refreshUsage,
     refreshAll,
   };
 }
