@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useDashboard, type BrandingSettings } from "@/contexts/DashboardContext";
 import {
   Palette,
@@ -34,6 +34,8 @@ export function BrandingSettings() {
   const { settings, updateBranding } = useDashboard();
   const [branding, setBranding] = useState<BrandingSettings>(settings.branding);
   const [saved, setSaved] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleSave = () => {
     updateBranding(branding);
@@ -47,6 +49,22 @@ export function BrandingSettings() {
       primaryColor: preset.primary,
       accentColor: preset.accent,
     }));
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+
+    // Convert to data URL for local storage
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const dataUrl = ev.target?.result as string;
+      setBranding((prev) => ({ ...prev, logo: dataUrl }));
+      setUploading(false);
+    };
+    reader.onerror = () => setUploading(false);
+    reader.readAsDataURL(file);
   };
 
   return (
@@ -83,10 +101,22 @@ export function BrandingSettings() {
                 className="flex-1 rounded-lg border border-[var(--border)] bg-[var(--bg-card)] px-4 py-2.5 text-[var(--text-primary)] focus:border-[var(--smf-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--smf-primary)]"
                 placeholder="https://example.com/logo.png"
               />
-              <button className="flex items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--bg-card)] px-4 py-2 text-sm text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors">
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+                className="flex items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--bg-card)] px-4 py-2 text-sm text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors disabled:opacity-50"
+              >
                 <Upload className="h-4 w-4" />
-                Upload
+                {uploading ? "Uploading..." : "Upload"}
               </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleFileUpload}
+              />
             </div>
             {branding.logo && (
               <div className="mt-3 flex items-center gap-3 rounded-lg border border-[var(--border)] bg-[var(--bg-hover)] p-3">
