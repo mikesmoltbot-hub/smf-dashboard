@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SMF Dashboard Mockup</title>
+  <style>
+    :root {
+      --bg-primary: #0f1117;
+      --bg-secondary: #1a1d27;
+      --bg-card: #1e2231;
+      --bg-hover: #252a3a;
+      --border: #2a2f3d;
+      --text-primary: #f0f2f5;
+      --text-secondary: #8b92a5;
+      --text-muted: #5c6378;
+      --accent: #6366f1;
+      --accent-hover: #818cf8;
+      --success: #22c55e;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --pro: #f59e0b;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      display: flex;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 260px;
+      background: var(--bg-secondary);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      position: fixed;
+      left: 0;
+      top: 0;
+    }
+
+    .sidebar-header {
+      padding: 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, var(--accent), #a855f7);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 18px;
+    }
+
+    .brand h1 {
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .brand span {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .nav-section {
+      padding: 16px 12px 8px;
+    }
+
+    .nav-section-title {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      padding-left: 8px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 14px;
+      transition: all 0.15s;
+      cursor: pointer;
+      margin-bottom: 2px;
+    }
+
+    .nav-item:hover {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+    }
+
+    .nav-item.active {
+      background: var(--accent);
+      color: white;
+    }
+
+    .nav-item .icon {
+      width: 18px;
+      height: 18px;
+      opacity: 0.8;
+    }
+
+    .nav-item .badge {
+      margin-left: auto;
+      background: var(--accent);
+      color: white;
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 10px;
+    }
+
+    .nav-item .pro-badge {
+      background: var(--pro);
+      color: black;
+      font-size: 9px;
+      font-weight: 600;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    .sidebar-footer {
+      margin-top: auto;
+      padding: 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    .gateway-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      background: var(--success);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    /* Main Content */
+    .main {
+      flex: 1;
+      margin-left: 260px;
+      min-height: 100vh;
+    }
+
+    /* Header */
+    .header {
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .header-left h2 {
+      font-size: 20px;
+      font-weight: 600;
+    }
+
+    .header-left span {
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .search-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 280px;
+    }
+
+    .search-box input {
+      background: transparent;
+      border: none;
+      color: var(--text-primary);
+      font-size: 14px;
+      width: 100%;
+      outline: none;
+    }
+
+    .search-box input::placeholder {
+      color: var(--text-muted);
+    }
+
+    .theme-toggle {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px;
+      cursor: pointer;
+      color: var(--text-secondary);
+    }
+
+    .notifications {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px;
+      cursor: pointer;
+      color: var(--text-secondary);
+      position: relative;
+    }
+
+    .notifications .count {
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      background: var(--danger);
+      color: white;
+      font-size: 10px;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Content Area */
+    .content {
+      padding: 32px;
+    }
+
+    /* Dashboard Grid */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 24px;
+    }
+
+    /* Cards */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .card-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .card-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .card-body {
+      padding: 20px;
+    }
+
+    /* Coffee Briefing */
+    .briefing-card {
+      grid-column: 1;
+    }
+
+    .briefing-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    .briefing-item {
+      background: var(--bg-hover);
+      border-radius: 10px;
+      padding: 16px;
+      text-align: center;
+    }
+
+    .briefing-item .value {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .briefing-item .label {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .weather-large {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      margin-bottom: 20px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .weather-icon {
+      font-size: 48px;
+    }
+
+    .weather-temp {
+      font-size: 42px;
+      font-weight: 700;
+    }
+
+    .weather-desc {
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
+
+    .weather-location {
+      color: var(--text-muted);
+      font-size: 12px;
+    }
+
+    .briefing-tasks {
+      margin-top: 16px;
+    }
+
+    .briefing-task {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .briefing-task:last-child {
+      border-bottom: none;
+    }
+
+    .task-checkbox {
+      width: 18px;
+      height: 18px;
+      border: 2px solid var(--border);
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .task-checkbox.checked {
+      background: var(--success);
+      border-color: var(--success);
+    }
+
+    .task-text {
+      flex: 1;
+      font-size: 14px;
+    }
+
+    .task-text.completed {
+      text-decoration: line-through;
+      color: var(--text-muted);
+    }
+
+    .task-priority {
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+
+    .priority-high { background: rgba(239, 68, 68, 0.2); color: var(--danger); }
+    .priority-medium { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
+    .priority-low { background: rgba(34, 197, 94, 0.2); color: var(--success); }
+
+    /* Tasks Kanban Preview */
+    .kanban-preview {
+      grid-column: 2;
+      grid-row: 1 / 3;
+    }
+
+    .kanban-columns {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+
+    .kanban-col {
+      background: var(--bg-hover);
+      border-radius: 8px;
+      padding: 12px;
+      min-height: 200px;
+    }
+
+    .kanban-col-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .kanban-col-title {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .kanban-col-count {
+      background: var(--bg-card);
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .kanban-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px;
+      margin-bottom: 8px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .kanban-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-1px);
+    }
+
+    .kanban-card-title {
+      margin-bottom: 6px;
+    }
+
+    .kanban-card-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .kanban-card-deadline {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* Agents Preview */
+    .agents-preview {
+      grid-column: 1;
+    }
+
+    .agent-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+
+    .agent-card {
+      background: var(--bg-hover);
+      border-radius: 10px;
+      padding: 14px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.15s;
+      border: 1px solid transparent;
+    }
+
+    .agent-card:hover {
+      border-color: var(--accent);
+    }
+
+    .agent-avatar {
+      width: 44px;
+      height: 44px;
+      background: linear-gradient(135deg, var(--accent), #a855f7);
+      border-radius: 12px;
+      margin: 0 auto 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+
+    .agent-name {
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .agent-status {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .agent-status .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+    }
+
+    .agent-status .dot.active { background: var(--success); }
+    .agent-status .dot.inactive { background: var(--text-muted); }
+
+    /* Skills Preview */
+    .skills-preview {
+      grid-column: 1;
+    }
+
+    .skill-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .skill-tag {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--bg-hover);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 6px 12px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .skill-tag:hover {
+      border-color: var(--accent);
+    }
+
+    .skill-tag .icon {
+      font-size: 14px;
+    }
+
+    .skill-tag.pro {
+      border-color: var(--pro);
+      background: rgba(245, 158, 11, 0.1);
+    }
+
+    .skill-tag.pro::after {
+      content: '⭐';
+      font-size: 10px;
+    }
+
+    /* Quick Stats Row */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .stat-value {
+      font-size: 28px;
+      font-weight: 700;
+    }
+
+    .stat-change {
+      font-size: 12px;
+      margin-top: 4px;
+    }
+
+    .stat-change.up { color: var(--success); }
+    .stat-change.down { color: var(--danger); }
+
+    /* Section Labels */
+    .section-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+
+    /* Settings Icon in Header */
+    .settings-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 14px;
+      color: var(--text-secondary);
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .settings-btn:hover {
+      border-color: var(--accent);
+      color: var(--text-primary);
+    }
+  </style>
+</head>
+<body>
+  <!-- Sidebar -->
+  <nav class="sidebar">
+    <div class="sidebar-header">
+      <div class="logo">S</div>
+      <div class="brand">
+        <h1>SMF Dashboard</h1>
+        <span>Business Intelligence</span>
+      </div>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-section-title">Overview</div>
+      <a class="nav-item active">
+        <span class="icon">📊</span>
+        Dashboard
+        <span class="badge">Home</span>
+      </a>
+      <a class="nav-item">
+        <span class="icon">📈</span>
+        Usage & Costs
+      </a>
+      <a class="nav-item">
+        <span class="icon">📞</span>
+        Activity
+      </a>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-section-title">Agents</div>
+      <a class="nav-item">
+        <span class="icon">🤖</span>
+        All Agents
+      </a>
+      <a class="nav-item">
+        <span class="icon">💬</span>
+        Chat
+      </a>
+      <a class="nav-item">
+        <span class="icon">📝</span>
+        Sessions
+      </a>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-section-title">Business</div>
+      <a class="nav-item">
+        <span class="icon">✅</span>
+        Tasks <span class="pro-badge">PRO</span>
+      </a>
+      <a class="nav-item">
+        <span class="icon">📅</span>
+        Calendar
+      </a>
+      <a class="nav-item">
+        <span class="icon">🔗</span>
+        Integrations
+      </a>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-section-title">Plugins</div>
+      <a class="nav-item">
+        <span class="icon">📄</span>
+        Simple CMS
+      </a>
+      <a class="nav-item">
+        <span class="icon">🎣</span>
+        Lead Capture
+      </a>
+      <a class="nav-item">
+        <span class="icon">🔍</span>
+        SEO + GEO
+      </a>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-section-title">Knowledge</div>
+      <a class="nav-item">
+        <span class="icon">🧠</span>
+        Memory
+      </a>
+      <a class="nav-item">
+        <span class="icon">💾</span>
+        Vectors
+      </a>
+      <a class="nav-item">
+        <span class="icon">📁</span>
+        Documents
+      </a>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-section-title">System</div>
+      <a class="nav-item">
+        <span class="icon">🔧</span>
+        Skills
+      </a>
+      <a class="nav-item">
+        <span class="icon">⚙️</span>
+        Settings
+      </a>
+    </div>
+
+    <div class="sidebar-footer">
+      <div class="gateway-status">
+        <div class="status-dot"></div>
+        Gateway Online
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="main">
+    <header class="header">
+      <div class="header-left">
+        <h2>Good Morning, Michael</h2>
+        <span>Tuesday, March 24, 2026</span>
+      </div>
+      <div class="header-right">
+        <div class="search-box">
+          <span>🔍</span>
+          <input type="text" placeholder="Search anything...">
+        </div>
+        <button class="theme-toggle">🌙</button>
+        <button class="notifications">
+          🔔
+          <span class="count">3</span>
+        </button>
+        <button class="settings-btn">
+          ⚙️ Settings
+        </button>
+      </div>
+    </header>
+
+    <div class="content">
+      <!-- Quick Stats -->
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-label">💰 Today's Spend</div>
+          <div class="stat-value">$2.47</div>
+          <div class="stat-change up">↑ 12% vs yesterday</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">🤖 Active Agents</div>
+          <div class="stat-value">4</div>
+          <div class="stat-change">3 online, 1 idle</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">📋 Open Tasks</div>
+          <div class="stat-value">12</div>
+          <div class="stat-change down">↓ 3 completed today</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">⚡ Gateway</div>
+          <div class="stat-value" style="color: var(--success);">Online</div>
+          <div class="stat-change">99.9% uptime</div>
+        </div>
+      </div>
+
+      <!-- Main Dashboard Grid -->
+      <div class="dashboard-grid">
+        <!-- Coffee Briefing -->
+        <div class="card briefing-card">
+          <div class="card-header">
+            <div class="card-title">
+              ☕ Coffee Briefing
+              <span class="pro-badge">PRO</span>
+            </div>
+            <span style="font-size: 12px; color: var(--text-muted);">Refresh</span>
+          </div>
+          <div class="card-body">
+            <div class="weather-large">
+              <div class="weather-icon">🌤️</div>
+              <div>
+                <div class="weather-temp">72°F</div>
+                <div class="weather-desc">Partly Cloudy</div>
+                <div class="weather-location">New York, NY</div>
+              </div>
+            </div>
+            <div class="briefing-grid">
+              <div class="briefing-item">
+                <div class="value">3</div>
+                <div class="label">Meetings Today</div>
+              </div>
+              <div class="briefing-item">
+                <div class="value">8</div>
+                <div class="label">Open Tasks</div>
+              </div>
+              <div class="briefing-item">
+                <div class="value">$47</div>
+                <div class="label">MTD Spend</div>
+              </div>
+            </div>
+            <div class="briefing-tasks">
+              <div class="section-label">Top Tasks</div>
+              <div class="briefing-task">
+                <div class="task-checkbox"></div>
+                <div class="task-text">Review Q1 marketing report</div>
+                <div class="task-priority priority-high">High</div>
+              </div>
+              <div class="briefing-task">
+                <div class="task-checkbox checked"></div>
+                <div class="task-text completed">Prepare investor update</div>
+                <div class="task-priority priority-medium">Med</div>
+              </div>
+              <div class="briefing-task">
+                <div class="task-checkbox"></div>
+                <div class="task-text">Call with engineering team</div>
+                <div class="task-priority priority-low">Low</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tasks Kanban Preview -->
+        <div class="card kanban-preview">
+          <div class="card-header">
+            <div class="card-title">
+              ✅ Tasks
+              <span class="pro-badge">PRO</span>
+            </div>
+            <span style="font-size: 12px; color: var(--accent);">View All →</span>
+          </div>
+          <div class="card-body">
+            <div class="kanban-columns">
+              <div class="kanban-col">
+                <div class="kanban-col-header">
+                  <span class="kanban-col-title" style="color: var(--danger);">To Do</span>
+                  <span class="kanban-col-count">5</span>
+                </div>
+                <div class="kanban-card">
+                  <div class="kanban-card-title">Update homepage copy</div>
+                  <div class="kanban-card-meta">
+                    <span>Today</span>
+                  </div>
+                </div>
+                <div class="kanban-card">
+                  <div class="kanban-card-title">Fix checkout bug</div>
+                  <div class="kanban-card-meta">
+                    <span>Tomorrow</span>
+                  </div>
+                </div>
+              </div>
+              <div class="kanban-col">
+                <div class="kanban-col-header">
+                  <span class="kanban-col-title" style="color: var(--warning);">In Progress</span>
+                  <span class="kanban-col-count">3</span>
+                </div>
+                <div class="kanban-card">
+                  <div class="kanban-card-title">Design landing page</div>
+                  <div class="kanban-card-meta">
+                    <span>Due Fri</span>
+                  </div>
+                </div>
+              </div>
+              <div class="kanban-col">
+                <div class="kanban-col-header">
+                  <span class="kanban-col-title" style="color: var(--success);">Done</span>
+                  <span class="kanban-col-count">12</span>
+                </div>
+                <div class="kanban-card">
+                  <div class="kanban-card-title">Write blog post</div>
+                  <div class="kanban-card-meta">
+                    <span>Completed</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Agents Preview -->
+        <div class="card agents-preview">
+          <div class="card-header">
+            <div class="card-title">🤖 Active Agents</div>
+            <span style="font-size: 12px; color: var(--accent);">Manage →</span>
+          </div>
+          <div class="card-body">
+            <div class="agent-grid">
+              <div class="agent-card">
+                <div class="agent-avatar">🤖</div>
+                <div class="agent-name">Main Agent</div>
+                <div class="agent-status">
+                  <span class="dot active"></span>
+                  Active
+                </div>
+              </div>
+              <div class="agent-card">
+                <div class="agent-avatar">📝</div>
+                <div class="agent-name">Code Writer</div>
+                <div class="agent-status">
+                  <span class="dot active"></span>
+                  Active
+                </div>
+              </div>
+              <div class="agent-card">
+                <div class="agent-avatar">🔍</div>
+                <div class="agent-name">Researcher</div>
+                <div class="agent-status">
+                  <span class="dot active"></span>
+                  Active
+                </div>
+              </div>
+              <div class="agent-card">
+                <div class="agent-avatar">✍️</div>
+                <div class="agent-name">Writer</div>
+                <div class="agent-status">
+                  <span class="dot inactive"></span>
+                  Idle
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Skills Preview -->
+        <div class="card" style="grid-column: 1;">
+          <div class="card-header">
+            <div class="card-title">🔧 Skills</div>
+            <span style="font-size: 12px; color: var(--accent);">Browse All →</span>
+          </div>
+          <div class="card-body">
+            <div class="skill-tags">
+              <div class="skill-tag"><span class="icon">📁</span> File Organizer</div>
+              <div class="skill-tag"><span class="icon">📄</span> PDF Toolkit</div>
+              <div class="skill-tag"><span class="icon">🔢</span> CSV Converter</div>
+              <div class="skill-tag"><span class="icon">🔒</span> Password Gen</div>
+              <div class="skill-tag"><span class="icon">🌤️</span> Weather</div>
+              <div class="skill-tag"><span class="icon">☕</span> Coffee Briefing <span class="pro-badge">PRO</span></div>
+              <div class="skill-tag"><span class="icon">📊</span> Lead Capture <span class="pro-badge">PRO</span></div>
+              <div class="skill-tag"><span class="icon">📞</span> Email Campaign <span class="pro-badge">PRO</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</body>
+</html>
