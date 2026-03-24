@@ -29,20 +29,65 @@ export function CoffeeBriefing() {
   const [data, setData] = useState<BriefingData | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Fetch briefing data (would come from OpenClaw gateway in production)
+  // Map weather condition code to icon
+  const getWeatherIcon = (code: number): string => {
+    if (code === 113) return "☀️";
+    if (code >= 116 && code <= 119) return "⛅";
+    if (code >= 120 && code <= 122) return "🌤️";
+    if (code >= 124 && code <= 128) return "☀️";
+    if (code >= 143 && code <= 176) return "🌫️";
+    if (code >= 179 && code <= 182) return "🌨️";
+    if (code >= 185 && code <= 200) return "🌧️";
+    if (code >= 227 && code <= 248) return "❄️";
+    if (code >= 260 && code <= 263) return "🌧️";
+    if (code >= 266 && code <= 299) return "🌧️";
+    if (code >= 302 && code <= 359) return "🌧️";
+    if (code >= 362 && code <= 377) return "🌨️";
+    if (code >= 386 && code <= 395) return "⛈️";
+    if (code >= 398 && code <= 399) return "🌨️";
+    if (code >= 500 && code <= 531) return "🌧️";
+    if (code >= 600 && code <= 622) return "🌨️";
+    if (code >= 701 && code <= 781) return "🌫️";
+    return "🌡️";
+  };
+
+  // Fetch briefing data
   useEffect(() => {
     const fetchBriefing = async () => {
       setLoading(true);
-      // Simulate API call - in production this would call the OpenClaw gateway
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      const location = settings.branding.weatherLocation || "New York, NY";
+
+      // Fetch real weather from wttr.in
+      let weatherData = {
+        temp: 72,
+        condition: "Clear",
+        location: location,
+        icon: "☀️",
+      };
+
+      try {
+        const weatherRes = await fetch(
+          `https://wttr.in/${encodeURIComponent(location)}?format=j1`,
+          { signal: AbortSignal.timeout(5000) }
+        );
+        if (weatherRes.ok) {
+          const w = await weatherRes.json();
+          const current = w.current_condition?.[0];
+          if (current) {
+            weatherData = {
+              temp: parseInt(current.temp_F || "72"),
+              condition: current.weatherDesc?.[0]?.value || "Clear",
+              location: w.nearest_area?.[0]?.areaName?.[0]?.value || location,
+              icon: getWeatherIcon(parseInt(current.weatherCode || "113")),
+            };
+          }
+        }
+      } catch {
+        // Keep defaults on error
+      }
 
       setData({
-        weather: {
-          temp: 72,
-          condition: "Partly Cloudy",
-          location: "New York, NY",
-          icon: "⛅",
-        },
+        weather: weatherData,
         meetings: 3,
         tasks: [
           { id: "1", text: "Review Q1 marketing report", completed: false, priority: "high" },

@@ -11,6 +11,7 @@ export interface BrandingSettings {
   primaryColor: string;
   accentColor: string;
   companyName: string;
+  weatherLocation: string; // e.g. "New York, NY" or "zip:10001"
 }
 
 export interface DashboardTheme {
@@ -64,6 +65,7 @@ const DEFAULT_BRANDING: BrandingSettings = {
   primaryColor: "#6366f1", // SMF Works indigo
   accentColor: "#a855f7", // Purple accent
   companyName: "SMF Works",
+  weatherLocation: "New York, NY",
 };
 
 const DEFAULT_THEME: DashboardTheme = {

@@ -91,6 +91,22 @@ export function BrandingSettings() {
 
           <div>
             <label className="block text-sm font-medium text-[var(--text-secondary)] mb-2">
+              Weather Location
+            </label>
+            <input
+              type="text"
+              value={branding.weatherLocation || ""}
+              onChange={(e) => setBranding((p) => ({ ...p, weatherLocation: e.target.value }))}
+              className="w-full rounded-lg border border-[var(--border)] bg-[var(--bg-card)] px-4 py-2.5 text-[var(--text-primary)] focus:border-[var(--smf-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--smf-primary)]"
+              placeholder="New York, NY or zip code"
+            />
+            <p className="mt-1 text-xs text-[var(--text-muted)]">
+              City and state/country, or zip code
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-[var(--text-secondary)] mb-2">
               Logo URL
             </label>
             <div className="flex gap-3">
