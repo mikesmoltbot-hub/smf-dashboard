@@ -5,6 +5,7 @@ import { BrandingSettings } from "@/components/settings/branding-settings";
 import { ThemeSettings } from "@/components/settings/theme-settings";
 import { PluginSettings } from "@/components/settings/plugin-settings";
 import { Settings, Palette, Plug, Shield, Keyboard } from "lucide-react";
+import { SecuritySettings } from "@/components/settings/security-settings";
 
 type Tab = {
   id: string;
@@ -16,6 +17,7 @@ const TABS: Tab[] = [
   { id: "general", label: "General", icon: Settings },
   { id: "appearance", label: "Appearance", icon: Palette },
   { id: "plugins", label: "Plugins", icon: Plug },
+  { id: "security", label: "Security", icon: Shield },
 ];
 
 export default function SettingsPage() {
@@ -61,6 +63,7 @@ export default function SettingsPage() {
           {activeTab === "general" && <BrandingSettings />}
           {activeTab === "appearance" && <ThemeSettings />}
           {activeTab === "plugins" && <PluginSettings />}
+          {activeTab === "security" && <SecuritySettings />}
         </div>
       </div>
     </div>
