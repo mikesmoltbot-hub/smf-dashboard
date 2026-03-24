@@ -36,6 +36,96 @@ A **modular dashboard** where:
 
 ---
 
+## Research Findings
+
+### OpenClaw Plugin System (Key Insight)
+
+OpenClaw **already has a full plugin system**. Before building a new plugin architecture, we should leverage it:
+
+**OpenClaw Plugin Capabilities:**
+- Channel plugins (Telegram, WhatsApp, Discord, etc.)
+- Provider plugins (model providers: OpenAI, Anthropic, etc.)
+- Tool/hook plugins (skills)
+- Context engine plugins
+- HTTP route plugins
+
+**What this means for SMF Dashboard:**
+- The dashboard is a **visual frontend** for OpenClaw, not a separate plugin host
+- Dashboard "plugins" (CMS, Lead Capture) should be **OpenClaw skills** that the dashboard visualizes
+- The dashboard already connects to OpenClaw via WebSocket gateway protocol
+- We don't need to build plugin loading/sandboxing — OpenClaw handles that
+
+**Dashboard Plugin Registry** (lightweight, for SMF add-ons only):
+```json
+// ~/.smf/dashboard/plugins.json
+{
+  "plugins": [
+    {
+      "id": "simple-cms",
+      "name": "Simple CMS",
+      "type": "openclaw-skill",
+      "skillId": "smf-simple-cms",
+      "nav": { "label": "CMS", "icon": "FileText", "order": 10 }
+    }
+  ]
+}
+```
+
+### Next.js Modular Architecture Patterns (2025-2026 Best Practices)
+
+Based on research of Next.js patterns:
+
+**1. Feature-Based Folder Structure (recommended)**
+```
+src/
+├── app/                    # App Router routes
+│   ├── (dashboard)/        # Route group for dashboard
+│   │   ├── layout.tsx     # Dashboard layout with nav
+│   │   ├── page.tsx       # Dashboard home
+│   │   ├── tasks/         # Kanban module
+│   │   ├── agents/        # Agents view module
+│   │   └── settings/      # Settings module
+│   └── (plugins)/          # Plugin routes
+│       ├── cms/
+│       └── lead-capture/
+├── features/              # Feature modules
+│   ├── coffee-briefing/
+│   ├── kanban/
+│   ├── agents/
+│   └── skills/
+├── shared/                # Shared UI, hooks, utils
+│   ├── ui/
+│   ├── hooks/
+│   └── lib/
+└── components/            # Shared components
+```
+
+**2. Route Groups for Isolation**
+- `(dashboard)/` — baseline modules, always loaded
+- `(plugins)/` — plugin-provided routes, lazy-loaded
+- Each group shares a layout but has isolated routes
+
+**3. Shared Context Pattern**
+```typescript
+// Shared context for theme/branding
+<DashboardProvider>
+  <ThemeProvider>
+    {children}
+  </ThemeProvider>
+</DashboardProvider>
+
+// Plugin registration hook
+function usePlugin(pluginId: string) {
+  const plugins = useContext(PluginContext);
+  return plugins.find(p => p.id === pluginId);
+}
+```
+
+**4. Module Federation (future)**
+For true runtime plugin isolation, consider Next.js Module Federation. However, for SMF dashboard, feature-based code splitting is sufficient.
+
+---
+
 ## Baseline Dashboard Modules
 
 The baseline ships with core modules and provides the plugin infrastructure.
@@ -137,37 +227,49 @@ The baseline ships with core modules and provides the plugin infrastructure.
 
 ---
 
-### Plugin Architecture
+### Plugin Architecture (Revised)
 
-**How plugins work:**
-1. Plugin is a Next.js route group (e.g., `/app/cms/`)
-2. Plugin registers its nav items in a shared registry
-3. Baseline dashboard reads registry and renders nav
-4. Plugin shares the same layout, theme, and auth
+**Key insight:** Use OpenClaw's existing plugin system for actual plugins. Build a **lightweight dashboard plugin registry** for SMF-specific add-ons that don't fit as OpenClaw skills.
+
+**Two types of plugins:**
+
+1. **OpenClaw Skills** (most add-ons)
+   - CMS, Lead Capture, SEO+GEO are OpenClaw skills
+   - Dashboard provides a **visual interface** for them
+   - Skill data stored in `~/.smf/<skill-name>/`
+   - Dashboard reads skill data and renders UI
+
+2. **Dashboard-Only Plugins** (rare)
+   - Pure React components for dashboard-specific features
+   - Mount into dashboard via plugin registry
+   - Share the dashboard theme/layout
 
 **Plugin Registry:**
 ```typescript
-// ~/.smf/dashboard/plugins.json
-{
-  "plugins": [
-    {
-      "id": "simple-cms",
-      "name": "Simple CMS",
-      "version": "1.0.0",
-      "routes": ["/cms"],
-      "nav": { "label": "CMS", "icon": "FileText", "order": 10 }
-    }
-  ]
+// types/plugin.ts
+interface DashboardPlugin {
+  id: string;
+  name: string;
+  version: string;
+  type: 'openclaw-skill' | 'dashboard-module';
+  skillId?: string;           // if type === 'openclaw-skill'
+  route?: string;             // base route for this plugin
+  nav: {
+    label: string;
+    icon: string;
+    order: number;
+  };
+  component?: React.ComponentType;  // for dashboard-only modules
 }
 ```
 
-**Plugin API (for plugins to access shared data):**
-```typescript
-// Shared hooks
-useSettings() → { logo, colors, company }
-useOpenClaw() → gateway API client
-useAuth() → subscription status
-```
+**Registry storage:** `~/.smf/dashboard/plugins.json`
+
+**Plugin discovery:**
+1. Read `~/.smf/dashboard/plugins.json`
+2. For each plugin, load its route group
+3. Register nav items
+4. Initialize skill data if needed
 
 ---
 
@@ -183,7 +285,12 @@ useAuth() → subscription status
 - SEO fields per page
 - Static site generation option
 
-**Dependency:** Baseline Dashboard
+**Dependency:** Baseline Dashboard + OpenClaw skill
+
+**Implementation:**
+- Build as OpenClaw skill with data in `~/.smf/simple-cms/`
+- Dashboard provides visual editor UI
+- CMS pages stored as Markdown files
 
 ---
 
@@ -198,7 +305,10 @@ useAuth() → subscription status
 - Export to CSV
 - Email notification on new lead
 
-**Integration:** Move data to `~/.smf/lead-capture/`
+**Integration:** 
+- Move data to `~/.smf/lead-capture/`
+- Dashboard provides visual lead management UI
+- Existing skill provides automation (forms, notifications)
 
 ---
 
@@ -213,7 +323,30 @@ useAuth() → subscription status
 - GEO optimization checker
 - Article brief generator
 
-**Integration:** Package as plugin that uses skill internally
+**Integration:** 
+- Package as OpenClaw skill
+- Dashboard provides visual analytics UI
+- Uses skill for content generation
+
+---
+
+## Tech Stack (Current - No Changes Needed)
+
+| Layer | Technology |
+|-------|------------|
+| Framework | Next.js 16 |
+| Language | TypeScript |
+| Styling | Tailwind CSS 4 |
+| UI Components | shadcn/ui + radix-ui |
+| State | React Context + Zustand |
+| Icons | Lucide React |
+| Build | Webpack |
+
+**Key libraries already in use:**
+- `@xyflow/react` — for Kanban board
+- `recharts` — for data visualization
+- `@monaco-editor/react` — for code/text editing
+- `ai` SDK — for AI agent interactions
 
 ---
 
@@ -226,16 +359,17 @@ useAuth() → subscription status
    - `~/.smf/dashboard/plugins.json` schema
    - Registry reader hook
    - Nav items builder from registry
+   - Settings persistence
 
-2. **Add Settings module** (1 day)
+2. **Skin to SMF Works branding** (1 day)
+   - Logo, colors, fonts from smfworks.com
+   - Tailwind CSS variables for theming
+   - Responsive layout
+
+3. **Add Settings module** (1 day)
    - Branding panel (logo, colors)
    - Company info panel
    - Export/import settings
-
-3. **Simplify existing dashboard** (2 days)
-   - Remove clutter, focus on core
-   - Apply SMF Works skin
-   - Fix any broken routes
 
 4. **Create Coffee Briefing widget** (1 day)
    - Use existing coffee-briefing skill
@@ -243,7 +377,7 @@ useAuth() → subscription status
 
 5. **Create Task Manager (Kanban)** (2 days)
    - Reuse task-manager skill data format
-   - Build Kanban UI
+   - Build Kanban UI with @xyflow/react
 
 6. **Create Agents View** (1 day)
    - Fetch from OpenClaw gateway
@@ -253,7 +387,7 @@ useAuth() → subscription status
    - Fetch from OpenClaw gateway
    - Grid view with filters
 
-**Phase 1 Total:** ~9 days
+**Phase 1 Total:** ~8 days
 
 ### Phase 2: Plugin System
 **Goal:** Enable add-on modules
@@ -283,20 +417,17 @@ useAuth() → subscription status
 
 ---
 
-## Tech Stack (Current)
+## Open Questions
 
-| Layer | Technology |
-|-------|------------|
-| Framework | Next.js 16 |
-| Language | TypeScript |
-| Styling | Tailwind CSS 4 |
-| UI Components | shadcn/ui + radix-ui |
-| State | React Context + Zustand |
-| Icons | Lucide React |
-| Fonts | Inter, Geist Mono |
-| Build | Webpack |
+1. **Existing dashboard features** — Current dashboard has chat, sessions, memory, vectors, terminals. Should baseline keep ALL of these, strip to minimal, or reorganize into modules?
 
-**No changes needed** — existing stack supports modular architecture.
+2. **Data storage** — Skills store data in `~/.smf/<skill-name>/`. Should dashboard plugins also use this pattern or have their own storage?
+
+3. **Plugin distribution** — Should plugins be separate git repos (like skills) or all in one monorepo?
+
+4. **OpenClaw dependency** — Dashboard requires OpenClaw gateway running. Is this acceptable or should it be more standalone?
+
+5. **Real-time updates** — Dashboard uses WebSocket for OpenClaw. Should plugin data also be real-time or polling-based?
 
 ---
 
@@ -304,19 +435,11 @@ useAuth() → subscription status
 
 1. **Confirm this plan** with Michael
 2. **Start Phase 1, Step 1:** Create plugin registry system
-3. **Get baseline dashboard running** and accessible
+3. **Get baseline dashboard running** and accessible at localhost:3000
 4. **Skin to SMF Works branding**
 5. **Build core modules one by one**
 
 ---
 
-## Open Questions
-
-1. Should baseline include ALL existing features (chat, sessions, memory, etc.) or be truly minimal?
-2. How should plugin authentication work — shared JWT or per-plugin?
-3. Should plugins be separate git repos or all in one monorepo?
-4. Version compatibility — how do plugins declare which baseline version they need?
-
----
-
 *Plan created: 2026-03-24*
+*Research completed: OpenClaw plugin architecture, Next.js modular patterns 2025-2026*
