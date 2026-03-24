@@ -15,7 +15,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mikesmoltbot-hub/smf-dashboard.git"
+    "url": "https://github.com/smfworks/smf-dashboard.git"
   },
   "homepage": "https://smfworks.com",
   "bin": {

@@ -100,7 +100,7 @@ Clone and run from source:
 
 ```bash
 # Clone the repository
-git clone https://github.com/mikesmoltbot-hub/smf-dashboard.git
+git clone https://github.com/smfworks/smf-dashboard.git
 cd smf-dashboard
 
 # Install dependencies
@@ -270,10 +270,10 @@ MIT License - See [LICENSE](./LICENSE) for details.
 
 ## Support
 
-- **Issues:** [GitHub Issues](https://github.com/mikesmoltbot-hub/smf-dashboard/issues)
-- **Discussions:** [GitHub Discussions](https://github.com/mikesmoltbot-hub/smf-dashboard/discussions)
+- **Issues:** [GitHub Issues](https://github.com/smfworks/smf-dashboard/issues)
+- **Discussions:** [GitHub Discussions](https://github.com/smfworks/smf-dashboard/discussions)
 - **Email:** michael@smfworks.com
 
 ---
 
-*Built by SMF Works | Powered by OpenClaw*
+*Built by SMF Works | Powered by OpenClaw*penClaw*
