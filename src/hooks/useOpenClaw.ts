@@ -9,9 +9,22 @@ import { useState, useEffect, useCallback } from "react";
 export interface OpenClawAgent {
   id: string;
   name: string;
-  status: "active" | "idle" | "offline";
-  lastSeen: string;
-  model?: string;
+  emoji?: string;
+  model: string;
+  fallbackModels: string[];
+  status: "active" | "idle" | "offline" | "unknown";
+  lastActive: number | null;
+  sessionCount: number;
+  totalTokens: number;
+  channels: string[];
+  isDefault: boolean;
+  runtimeSubagents: Array<{
+    sessionKey: string;
+    sessionId: string;
+    model: string;
+    status: "running" | "recent";
+    lastActive: number;
+  }>;
 }
 
 export interface OpenClawSession {
@@ -86,14 +99,10 @@ export interface UseOpenClawReturn {
 // API Helper
 // ─────────────────────────────────────────────────────────────────────────────
 
-const GATEWAY_URL = process.env.NEXT_PUBLIC_GATEWAY_URL || "http://127.0.0.1:18789";
-
-async function gatewayRequest<T>(endpoint: string): Promise<T | null> {
+async function apiRequest<T>(endpoint: string): Promise<T | null> {
   try {
-    const res = await fetch(`${GATEWAY_URL}${endpoint}`, {
-      headers: {
-        "Content-Type": "application/json",
-      },
+    const res = await fetch(endpoint, {
+      credentials: "include",
     });
     if (!res.ok) return null;
     return res.json();
@@ -107,15 +116,12 @@ async function gatewayRequest<T>(endpoint: string): Promise<T | null> {
 // ─────────────────────────────────────────────────────────────────────────────
 
 const MOCK_AGENTS: OpenClawAgent[] = [
-  { id: "1", name: "Main Agent", status: "active", lastSeen: new Date().toISOString(), model: "minimax-m2.7:cloud" },
-  { id: "2", name: "Code Writer", status: "active", lastSeen: new Date().toISOString(), model: "minimax-m2.7:cloud" },
-  { id: "3", name: "Researcher", status: "active", lastSeen: new Date().toISOString(), model: "qwen3.5:9b" },
-  { id: "4", name: "Writer", status: "idle", lastSeen: new Date(Date.now() - 3600000).toISOString(), model: "kimi-k2.5:cloud" },
+  { id: "main", name: "Aiona Edge", emoji: "🎯", status: "active", lastActive: Date.now(), model: "minimax-m2.7:cloud", fallbackModels: ["qwen3.5:9b"], sessionCount: 12, totalTokens: 125000, channels: ["webchat", "telegram"], isDefault: true, runtimeSubagents: [] },
+  { id: "writer", name: "Content Writer", emoji: "✍️", status: "idle", lastActive: Date.now() - 3600000, model: "kimi-k2.5:cloud", fallbackModels: [], sessionCount: 5, totalTokens: 45000, channels: [], isDefault: false, runtimeSubagents: [] },
 ];
 
 const MOCK_SESSIONS: OpenClawSession[] = [
-  { id: "s1", agentId: "1", model: "minimax-m2.7:cloud", contextUsed: 45000, contextLimit: 128000, createdAt: new Date(Date.now() - 86400000).toISOString(), lastActive: new Date().toISOString(), type: "dm" },
-  { id: "s2", agentId: "2", model: "minimax-m2.7:cloud", contextUsed: 12000, contextLimit: 128000, createdAt: new Date(Date.now() - 3600000).toISOString(), lastActive: new Date().toISOString(), type: "cron" },
+  { id: "s1", agentId: "main", model: "minimax-m2.7:cloud", contextUsed: 45000, contextLimit: 128000, createdAt: new Date(Date.now() - 86400000).toISOString(), lastActive: new Date().toISOString(), type: "dm" },
 ];
 
 const MOCK_CRON_JOBS: OpenClawCronJob[] = [
@@ -145,14 +151,13 @@ export function useOpenClaw(): UseOpenClawReturn {
   const [todaySpend] = useState(2.47);
   const [monthSpend] = useState(47.23);
 
-  // Check gateway status
+  // Check gateway status via Next.js API
   const checkStatus = useCallback(async () => {
-    const health = await gatewayRequest<{ ok: boolean; version?: string; uptime?: number }>("/healthz");
-    if (health?.ok) {
+    const data = await apiRequest<{ status: string; health?: { ok?: boolean; version?: string } }>("/api/gateway");
+    if (data?.status === "online" || data?.health?.ok) {
       setStatus({
         online: true,
-        version: health.version,
-        uptime: health.uptime,
+        version: data.health?.version,
       });
       return true;
     }
@@ -160,9 +165,9 @@ export function useOpenClaw(): UseOpenClawReturn {
     return false;
   }, []);
 
-  // Fetch agents
+  // Fetch agents from the rich /api/agents endpoint
   const refreshAgents = useCallback(async () => {
-    const data = await gatewayRequest<{ agents?: OpenClawAgent[] }>("/api/agents");
+    const data = await apiRequest<{ agents?: OpenClawAgent[]; defaultModel?: string }>("/api/agents");
     if (data?.agents) {
       setAgents(data.agents);
     } else {
@@ -170,34 +175,22 @@ export function useOpenClaw(): UseOpenClawReturn {
     }
   }, []);
 
-  // Fetch sessions
+  // Fetch sessions (placeholder - no real session endpoint yet)
   const refreshSessions = useCallback(async () => {
-    const data = await gatewayRequest<{ sessions?: OpenClawSession[] }>("/api/sessions");
-    if (data?.sessions) {
-      setSessions(data.sessions);
-    } else {
-      setSessions(MOCK_SESSIONS);
-    }
+    // TODO: Wire up to real session API when available
+    setSessions(MOCK_SESSIONS);
   }, []);
 
-  // Fetch cron jobs
+  // Fetch cron jobs (placeholder)
   const refreshCronJobs = useCallback(async () => {
-    const data = await gatewayRequest<{ jobs?: OpenClawCronJob[] }>("/api/cron");
-    if (data?.jobs) {
-      setCronJobs(data.jobs);
-    } else {
-      setCronJobs(MOCK_CRON_JOBS);
-    }
+    // TODO: Wire up to real cron API when available
+    setCronJobs(MOCK_CRON_JOBS);
   }, []);
 
-  // Fetch skills
+  // Fetch skills (placeholder)
   const refreshSkills = useCallback(async () => {
-    const data = await gatewayRequest<{ skills?: OpenClawSkill[] }>("/api/skills");
-    if (data?.skills) {
-      setSkills(data.skills);
-    } else {
-      setSkills(MOCK_SKILLS);
-    }
+    // TODO: Wire up to real skills API when available
+    setSkills(MOCK_SKILLS);
   }, []);
 
   // Refresh all

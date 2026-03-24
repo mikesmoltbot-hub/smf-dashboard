@@ -1,91 +1,94 @@
 "use client";
 
-import { useEffect } from "react";
 import { useOpenClaw } from "@/hooks/useOpenClaw";
-import { Wrench, Lock, Unlock, Star, ExternalLink } from "lucide-react";
+import { Wrench, Crown, Lock } from "lucide-react";
 
 export function SkillsExplorer() {
-  const { skills, refreshSkills } = useOpenClaw();
+  const { skills } = useOpenClaw();
 
-  useEffect(() => {
-    refreshSkills();
-  }, [refreshSkills]);
-
-  const installedSkills = skills.filter((s) => s.installed);
-  const proSkills = skills.filter((s) => s.type === "pro");
-  const freeSkills = skills.filter((s) => s.type === "free");
+  const installed = skills.filter((s) => s.installed);
+  const notInstalled = skills.filter((s) => !s.installed);
 
   return (
-    <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-card)]">
-      {/* Header */}
-      <div className="flex items-center justify-between border-b border-[var(--border)] px-5 py-4">
-        <div className="flex items-center gap-2">
-          <Wrench className="h-5 w-5 text-[var(--accent)]" />
-          <h3 className="font-semibold">Skills</h3>
-        </div>
-        <a
-          href="/skills"
-          className="text-sm text-[var(--accent)] hover:underline"
-        >
-          Browse All →
-        </a>
+    <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-card)] p-6">
+      <div className="mb-4 flex items-center gap-2">
+        <Wrench className="h-4 w-4 text-[var(--smf-primary)]" />
+        <h2 className="text-sm font-semibold text-[var(--text-primary)]">Skills</h2>
+        <span className="rounded-full bg-[var(--smf-primary)]/10 px-2 py-0.5 text-xs text-[var(--smf-primary)]">
+          {installed.length}
+        </span>
       </div>
 
-      {/* Skills Grid */}
-      <div className="p-5">
-        <div className="flex flex-wrap gap-2">
-          {installedSkills.map((skill) => (
-            <div
-              key={skill.id}
-              className={`flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm transition-colors ${
-                skill.type === "pro"
-                  ? "border-[var(--pro)]/50 bg-[var(--pro)]/10 text-[var(--pro)]"
-                  : "border-[var(--border)] bg-[var(--bg-hover)] text-[var(--text-secondary)] hover:border-[var(--accent)]"
-              }`}
-            >
-              {skill.type === "pro" ? (
-                <Star className="h-3 w-3" />
-              ) : (
-                <Unlock className="h-3 w-3" />
-              )}
-              <span>{skill.name}</span>
-            </div>
-          ))}
-
-          {/* Show locked pro skills */}
-          {proSkills.filter((s) => !s.installed).map((skill) => (
-            <div
-              key={skill.id}
-              className="flex items-center gap-2 rounded-full border border-[var(--border)]/50 bg-[var(--bg-secondary)] px-3 py-1.5 text-sm text-[var(--text-muted)] opacity-60"
-              title={`Requires Pro subscription: ${skill.description}`}
-            >
-              <Lock className="h-3 w-3" />
-              <span>{skill.name}</span>
-            </div>
-          ))}
-        </div>
-
-        {/* Pro CTA */}
-        {proSkills.some((s) => !s.installed) && (
-          <div className="mt-4 rounded-lg border border-[var(--pro)]/30 bg-[var(--pro)]/10 p-4">
-            <div className="flex items-center gap-3">
-              <Star className="h-5 w-5 text-[var(--pro)]" />
-              <div>
-                <div className="font-medium text-[var(--pro)]">Upgrade to Pro</div>
-                <div className="text-xs text-[var(--text-muted)]">
-                  Unlock {proSkills.filter((s) => !s.installed).length} premium skills
-                </div>
+      {/* Installed Skills */}
+      <div className="space-y-2">
+        {installed.map((skill) => (
+          <div
+            key={skill.id}
+            className="flex items-center gap-3 rounded-lg border border-[var(--border)] bg-[var(--bg-secondary)] p-3"
+          >
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-[var(--text-primary)] truncate">
+                  {skill.name}
+                </span>
+                {skill.type === "pro" && (
+                  <span className="shrink-0 rounded-full bg-[var(--smf-pro)]/10 px-1.5 py-0.5 text-[10px] font-medium text-[var(--smf-pro)]">
+                    PRO
+                  </span>
+                )}
               </div>
-              <a
-                href="/settings?tab=subscription"
-                className="ml-auto rounded bg-[var(--pro)] px-3 py-1.5 text-sm font-medium text-black hover:bg-[var(--pro)]/80 transition-colors"
-              >
-                Upgrade
-              </a>
+              <p className="text-xs text-[var(--text-muted)] truncate">
+                {skill.description}
+              </p>
+            </div>
+            <div className="text-[10px] text-[var(--text-muted)]">
+              v{skill.version}
             </div>
           </div>
-        )}
+        ))}
       </div>
+
+      {/* Available Skills */}
+      {notInstalled.length > 0 && (
+        <>
+          <div className="mt-4 mb-2 text-xs font-medium text-[var(--text-muted)]">
+            Available
+          </div>
+          <div className="space-y-2">
+            {notInstalled.map((skill) => (
+              <div
+                key={skill.id}
+                className="flex items-center gap-3 rounded-lg border border-dashed border-[var(--border)] bg-[var(--bg-secondary)]/50 p-3 opacity-60"
+              >
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-[var(--text-primary)] truncate">
+                      {skill.name}
+                    </span>
+                    {skill.type === "pro" && (
+                      <span className="shrink-0 rounded-full bg-[var(--smf-pro)]/10 px-1.5 py-0.5 text-[10px] font-medium text-[var(--smf-pro)]">
+                        PRO
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-[var(--text-muted)] truncate">
+                    {skill.description}
+                  </p>
+                </div>
+                <button className="shrink-0 rounded-lg bg-[var(--smf-primary)]/10 px-2 py-1 text-xs text-[var(--smf-primary)] hover:bg-[var(--smf-primary)]/20">
+                  Install
+                </button>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
+      {installed.length === 0 && notInstalled.length === 0 && (
+        <div className="py-6 text-center text-sm text-[var(--text-muted)]">
+          No skills installed. Browse ClawHub to discover skills.
+        </div>
+      )}
     </div>
   );
 }

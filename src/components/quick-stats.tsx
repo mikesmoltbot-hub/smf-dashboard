@@ -1,45 +1,48 @@
 "use client";
 
-import { useDashboard } from "@/contexts/DashboardContext";
 import { useOpenClaw } from "@/hooks/useOpenClaw";
-import { Coffee, DollarSign, Users, Activity, Zap } from "lucide-react";
+import { DollarSign, Users, Activity, Zap, Clock } from "lucide-react";
 
 interface QuickStatsProps {
   className?: string;
 }
 
 export function QuickStats({ className }: QuickStatsProps) {
-  const { isConnected } = useOpenClaw();
+  const { isConnected, agents, todaySpend, monthSpend } = useOpenClaw();
+
+  const activeCount = agents.filter((a) => a.status === "active").length;
+  const idleCount = agents.filter((a) => a.status === "idle").length;
+  const totalTokens = agents.reduce((sum, a) => sum + (a.totalTokens || 0), 0);
 
   const stats = [
     {
       label: "Today's Spend",
-      value: "$2.47",
-      change: "↑ 12% vs yesterday",
-      trend: "up",
+      value: `$${todaySpend.toFixed(2)}`,
+      change: `$${monthSpend.toFixed(2)} this month`,
+      trend: "up" as const,
       icon: DollarSign,
     },
     {
       label: "Active Agents",
-      value: "4",
-      change: "3 online, 1 idle",
-      trend: "neutral",
+      value: String(agents.length),
+      change: `${activeCount} active, ${idleCount} idle`,
+      trend: "neutral" as const,
       icon: Users,
     },
     {
-      label: "Open Tasks",
-      value: "12",
-      change: "↓ 3 completed today",
-      trend: "down",
+      label: "Total Sessions",
+      value: String(agents.reduce((sum, a) => sum + (a.sessionCount || 0), 0)),
+      change: `${(totalTokens / 1000).toFixed(0)}K tokens processed`,
+      trend: "neutral" as const,
       icon: Activity,
     },
     {
       label: "Gateway",
       value: isConnected ? "Online" : "Offline",
       change: isConnected ? "99.9% uptime" : "Reconnecting...",
-      trend: isConnected ? "up" : "down",
+      trend: isConnected ? "up" as const : "down" as const,
       icon: Zap,
-      valueColor: isConnected ? "var(--success)" : "var(--danger)",
+      valueColor: isConnected ? "var(--smf-success)" : "var(--smf-danger)",
     },
   ];
 
@@ -66,9 +69,9 @@ export function QuickStats({ className }: QuickStatsProps) {
               <div
                 className={`mt-1 text-xs ${
                   stat.trend === "up"
-                    ? "text-[var(--success)]"
+                    ? "text-[var(--smf-success)]"
                     : stat.trend === "down"
-                    ? "text-[var(--danger)]"
+                    ? "text-[var(--smf-danger)]"
                     : "text-[var(--text-muted)]"
                 }`}
               >
