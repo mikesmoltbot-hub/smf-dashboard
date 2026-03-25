@@ -38,6 +38,38 @@ const DEFAULT_GATEWAYS: RemoteGateway[] = [
   },
 ];
 
+interface SessionData {
+  name?: string;
+  model?: string;
+  status?: string;
+  displayName?: string;
+}
+
+function parseSessionsFromResponse(data: unknown): SessionData[] {
+  try {
+    // Handle the OpenClaw tool response format
+    if (data && typeof data === "object" && "result" in (data as Record<string, unknown>)) {
+      const result = (data as { result: unknown }).result;
+      if (result && typeof result === "object" && "content" in (result as Record<string, unknown>)) {
+        const content = (result as { content: unknown[] }).content;
+        if (Array.isArray(content) && content.length > 0) {
+          const first = content[0];
+          if (typeof first === "object" && first !== null && "text" in (first as Record<string, unknown>)) {
+            const text = (first as { text: string }).text;
+            const parsed = JSON.parse(text);
+            if (parsed && typeof parsed === "object" && "sessions" in parsed) {
+              return (parsed as { sessions: SessionData[] }).sessions;
+            }
+          }
+        }
+      }
+    }
+  } catch {
+    // Fall through
+  }
+  return [];
+}
+
 async function fetchRemoteAgents(gateway: RemoteGateway): Promise<{ gateway: RemoteGateway; agents: HubAgent[] }> {
   try {
     const controller = new AbortController();
@@ -54,26 +86,21 @@ async function fetchRemoteAgents(gateway: RemoteGateway): Promise<{ gateway: Rem
     if (!res.ok) return { gateway: { ...gateway, status: "offline" }, agents: [] };
 
     const data = await res.json();
-    let content = data;
-    if (data.result?.content) {
-      try {
-        content = typeof data.result.content === "string" ? JSON.parse(data.result.content) : data.result.content;
-      } catch { content = { sessions: [] }; }
-    }
+    const sessions = parseSessionsFromResponse(data);
 
-    const sessions = content?.sessions || [];
-    const agents = sessions.slice(0, 3).map((s: Record<string, unknown>, i: number) => ({
+    const agents = sessions.slice(0, 3).map((s: SessionData, i: number) => ({
       id: `${gateway.id}-${i}`,
-      name: String(s.name || `${gateway.name} Session ${i + 1}`),
+      name: String(s.displayName || s.name || `${gateway.name} Session ${i + 1}`),
       emoji: "🤖",
       role: String(s.model || "AI Agent"),
-      status: s.status === "active" ? "active" as const : s.status === "idle" ? "idle" as const : "offline" as const,
+      status: (s.status === "active" || s.status === "running") ? "active" as const : 
+               s.status === "idle" ? "idle" as const : "offline" as const,
       model: String(s.model || ""),
       gatewayId: gateway.id,
       gatewayName: gateway.name,
     }));
 
-    return { gateway: { ...gateway, status: "online" }, agents };
+    return { gateway: { ...gateway, status: agents.length > 0 ? "online" : "offline" }, agents };
   } catch {
     return { gateway: { ...gateway, status: "offline" }, agents: [] };
   }
