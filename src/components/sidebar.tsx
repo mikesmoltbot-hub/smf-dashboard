@@ -44,7 +44,6 @@ import {
   Radio,
   FileText,
   Target,
-  Network,
 } from "lucide-react";
 import { getChatUnreadCount, subscribeChatStore } from "@/lib/chat-store";
 
@@ -85,7 +84,6 @@ const defaultNavItems: NavItem[] = [
   { section: "cron", label: "Heartbeat", icon: Heart, href: "/heartbeat", tab: "heartbeat", isSubItem: true },
 
   // ── Plugins ──
-  { group: "Plugins", section: "hub", label: "Agent Hub", icon: Network, href: "/hub", beta: true },
   { section: "cms", label: "Simple CMS", icon: FileText, href: "/cms", beta: true },
   { section: "leads", label: "Lead Capture", icon: Target, href: "/leads", beta: true },
   { section: "seo", label: "SEO + GEO", icon: Search, href: "/seo", beta: true },
