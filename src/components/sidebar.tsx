@@ -72,7 +72,7 @@ const defaultNavItems: NavItem[] = [
   { group: "Agents", section: "agents", label: "All Agents", icon: Users, href: "/agents" },
   { section: "agents", label: "Subagents", icon: Users2, href: "/agents?tab=subagents", tab: "subagents", isSubItem: true },
   { section: "agents", label: "Models", icon: Cpu, href: "/agents?tab=models", tab: "models", isSubItem: true },
-  { section: "chat", label: "Chat", icon: MessageCircle, href: "https://smf-chat.vercel.app", external: true },
+  { section: "chat", label: "Chat", icon: MessageCircle, href: "/chat" },
   { section: "sessions", label: "Sessions", icon: MessageSquare, href: "/sessions" },
 
   // ── Business ──
@@ -117,7 +117,7 @@ const defaultNavItems: NavItem[] = [
 
 const hostedNavItems: NavItem[] = [
   // ── Core ──
-  { group: "Core", section: "chat", label: "Chat", icon: MessageCircle, href: "https://smf-chat.vercel.app", external: true },
+  { group: "Core", section: "chat", label: "Chat", icon: MessageCircle, href: "/chat" },
   { section: "channels", label: "Channels", icon: Radio, href: "/channels" },
   { section: "tasks", label: "Tasks", icon: ListChecks, href: "/tasks" },
   { section: "skills", label: "Skills", icon: Wrench, href: "/skills" },
