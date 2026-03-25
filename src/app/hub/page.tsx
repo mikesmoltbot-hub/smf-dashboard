@@ -1,40 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
-
-// Error Boundary Component
-class ErrorBoundary extends React.Component<
-  { children: React.ReactNode; fallback?: React.ReactNode },
-  { hasError: boolean; error: string }
-> {
-  constructor(props: { children: React.ReactNode; fallback?: React.ReactNode }) {
-    super(props);
-    this.state = { hasError: false, error: "" };
-  }
-  static getDerivedStateFromError(error: Error) {
-    return { hasError: true, error: error.message };
-  }
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error("[AgentHub ErrorBoundary]", error, errorInfo);
-  }
-  render() {
-    if (this.state.hasError) {
-      return this.props.fallback || (
-        <div className="flex-1 flex flex-col items-center justify-center gap-4 p-6">
-          <p className="text-[var(--smf-danger)] text-lg font-medium">Something went wrong</p>
-          <p className="text-sm text-[var(--text-muted)]">{this.state.error}</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="rounded-lg bg-[var(--smf-primary)] px-4 py-2 text-sm font-medium text-white"
-          >
-            Reload Page
-          </button>
-        </div>
-      );
-    }
-    return this.props.children;
-  }
-}
+import { useState, useEffect, Component, ReactNode } from "react";
 
 interface HubAgent {
   id: string;
@@ -82,115 +48,143 @@ const DEFAULT_GATEWAYS: RemoteGateway[] = [
 async function fetchAgentsFromGateway(gateway: RemoteGateway): Promise<HubAgent[]> {
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+    const timeoutId = setTimeout(() => controller.abort(), 8000);
 
-    try {
-      const res = await fetch(`${gateway.url}/tools/invoke`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${gateway.token}` },
-        body: JSON.stringify({ tool: "sessions_list", action: "json", args: {} }),
-        signal: controller.signal,
-      });
-      clearTimeout(timeoutId);
+    const res = await fetch(`${gateway.url}/tools/invoke`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${gateway.token}` },
+      body: JSON.stringify({ tool: "sessions_list", action: "json", args: {} }),
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
 
-      if (!res.ok) {
-        console.warn(`[AgentHub] Gateway ${gateway.name} returned ${res.status}`);
-        return [];
+    if (!res.ok) return [];
+
+    const data = await res.json();
+    let content = data;
+    
+    if (data.result?.content) {
+      try {
+        content = typeof data.result.content === "string" 
+          ? JSON.parse(data.result.content) 
+          : data.result.content;
+      } catch {
+        content = { sessions: [] };
       }
-
-      const data = await res.json();
-      
-      // Handle different response formats safely
-      let content = data;
-      if (data.result?.content) {
-        try {
-          content = typeof data.result.content === "string" 
-            ? JSON.parse(data.result.content) 
-            : data.result.content;
-        } catch {
-          content = { sessions: [] };
-        }
-      }
-
-      const sessions = content?.sessions || [];
-      return sessions.slice(0, 3).map((s: Record<string, unknown>, i: number) => ({
-        id: `${gateway.id}-${i}`,
-        name: String(s.name || `${gateway.name} Session ${i + 1}`),
-        emoji: "🤖",
-        role: String(s.model || "AI Agent"),
-        status: s.status === "active" ? "active" as const : s.status === "idle" ? "idle" as const : "offline" as const,
-        model: String(s.model || ""),
-        totalTokens: (s.totalTokens as number) || 0,
-        lastActive: (s.lastActive as number) || null,
-        sessionCount: 1,
-        channels: (s.channels as string[]) || [],
-        workspace: String(s.workspace || ""),
-        gatewayId: gateway.id,
-        gatewayName: gateway.name,
-      }));
-    } finally {
-      clearTimeout(timeoutId);
     }
-  } catch (e) {
-    if ((e as Error).name === "AbortError") {
-      console.warn(`[AgentHub] Gateway ${gateway.name} timed out`);
-    } else {
-      console.error(`[AgentHub] Failed to fetch from ${gateway.name}:`, e);
-    }
+
+    const sessions = content?.sessions || [];
+    return sessions.slice(0, 3).map((s: Record<string, unknown>, i: number) => ({
+      id: `${gateway.id}-${i}`,
+      name: String(s.name || `${gateway.name} Session ${i + 1}`),
+      emoji: "🤖",
+      role: String(s.model || "AI Agent"),
+      status: s.status === "active" ? "active" as const : s.status === "idle" ? "idle" as const : "offline" as const,
+      model: String(s.model || ""),
+      totalTokens: (s.totalTokens as number) || 0,
+      lastActive: (s.lastActive as number) || null,
+      sessionCount: 1,
+      channels: (s.channels as string[]) || [],
+      workspace: String(s.workspace || ""),
+      gatewayId: gateway.id,
+      gatewayName: gateway.name,
+    }));
+  } catch {
     return [];
   }
 }
 
-export function AgentHub() {
+// Error Boundary Component
+class ErrorBoundary extends Component<{ children: ReactNode; fallback?: ReactNode }, { hasError: boolean; error: Error | null }> {
+  constructor(props: { children: ReactNode; fallback?: ReactNode }) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error("[AgentHub ErrorBoundary]", error, errorInfo);
+  }
+  render() {
+    if (this.state.hasError) {
+      return this.props.fallback || (
+        <div className="flex-1 flex flex-col items-center justify-center gap-4 p-6">
+          <p className="text-[var(--smf-danger)] text-lg font-medium">Something went wrong</p>
+          <p className="text-sm text-[var(--text-muted)]">{this.state.error?.message}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="rounded-lg bg-[var(--smf-primary)] px-4 py-2 text-sm font-medium text-white"
+          >
+            Reload Page
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+export default function AgentHubPage() {
   return (
-    <ErrorBoundary>
-      <AgentHubInner />
+    <ErrorBoundary fallback={
+      <div className="flex-1 flex flex-col items-center justify-center gap-4 p-6">
+        <p className="text-[var(--smf-danger)]">Failed to load Agent Hub</p>
+        <button
+          onClick={() => window.location.reload()}
+          className="rounded-lg bg-[var(--smf-primary)] px-4 py-2 text-sm font-medium text-white"
+        >
+          Reload Page
+        </button>
+      </div>
+    }>
+      <AgentHubContent />
     </ErrorBoundary>
   );
 }
 
-function AgentHubInner() {
+function AgentHubContent() {
   const [activeTab, setActiveTab] = useState<string>("overview");
   const [agents, setAgents] = useState<HubAgent[]>([]);
   const [gateways, setGateways] = useState<RemoteGateway[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [debug, setDebug] = useState<string>("Starting...");
+  const [refreshCounter, setRefreshCounter] = useState<number>(0);
 
+  // Single effect for loading gateways and agents
   useEffect(() => {
-    console.log("[AgentHub] Mounted, loading gateways...");
-    try {
-      const stored = localStorage.getItem(GATEWAY_STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        setGateways(parsed);
-        setDebug(`Loaded ${parsed.length} gateways`);
-      } else {
-        setGateways(DEFAULT_GATEWAYS);
-        localStorage.setItem(GATEWAY_STORAGE_KEY, JSON.stringify(DEFAULT_GATEWAYS));
-        setDebug("Using defaults");
-      }
-    } catch (e) {
-      console.error("[AgentHub] Error loading gateways:", e);
-      setGateways(DEFAULT_GATEWAYS);
-      setDebug(`Error: ${e}`);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (gateways.length === 0) return;
-
     let cancelled = false;
-    setLoading(true);
-    setError(null);
 
-    async function load() {
+    async function loadData() {
+      // Step 1: Load gateways
+      setDebug("Loading gateways...");
+      
+      let loadedGateways: RemoteGateway[] = [];
       try {
-        console.log("[AgentHub] Fetching agents...");
-        setDebug("Fetching local agent...");
+        const stored = localStorage.getItem(GATEWAY_STORAGE_KEY);
+        if (stored) {
+          loadedGateways = JSON.parse(stored);
+        } else {
+          loadedGateways = DEFAULT_GATEWAYS;
+          localStorage.setItem(GATEWAY_STORAGE_KEY, JSON.stringify(DEFAULT_GATEWAYS));
+        }
+      } catch {
+        loadedGateways = DEFAULT_GATEWAYS;
+      }
 
+      if (cancelled) return;
+      setGateways(loadedGateways);
+      setDebug(`Gateways: ${loadedGateways.length}`);
+
+      // Step 2: Fetch local agent
+      await new Promise(r => setTimeout(r, 50));
+      if (cancelled) return;
+
+      setDebug("Fetching local...");
+      try {
         const localRes = await fetch("/api/agents");
-        if (!localRes.ok) throw new Error(`Local API failed: ${localRes.status}`);
+        if (!localRes.ok) throw new Error(`API ${localRes.status}`);
         const localData = await localRes.json();
         
         const localAgents: HubAgent[] = (localData.agents || []).map((a: Record<string, unknown>) => ({
@@ -209,10 +203,12 @@ function AgentHubInner() {
           gatewayName: "Aiona",
         }));
 
-        console.log(`[AgentHub] Got ${localAgents.length} local agents`);
+        // Step 3: Fetch remote agents
         setDebug(`Got ${localAgents.length} local, fetching remote...`);
-
-        const remoteResults = await Promise.allSettled(gateways.map(g => fetchAgentsFromGateway(g)));
+        
+        const remoteResults = await Promise.allSettled(
+          loadedGateways.map(g => fetchAgentsFromGateway(g))
+        );
         
         if (cancelled) return;
 
@@ -220,51 +216,51 @@ function AgentHubInner() {
         remoteResults.forEach((result, i) => {
           if (result.status === "fulfilled") {
             allAgents.push(...result.value);
-          } else {
-            console.warn(`[AgentHub] Gateway ${gateways[i].name} failed:`, result.reason);
           }
         });
 
-        console.log(`[AgentHub] Total agents: ${allAgents.length}`);
         setAgents(allAgents);
-        setDebug(`Total: ${allAgents.length} agents`);
+        setDebug(`Done: ${allAgents.length} agents`);
         
+        // Update gateway status
         setGateways(prev => prev.map(g => {
           const gAgents = allAgents.filter(a => a.gatewayId === g.id);
-          const hasOnline = gAgents.some(a => a.status !== "offline");
-          return { ...g, status: hasOnline ? "online" as const : "offline" as const };
+          return { ...g, status: gAgents.some(a => a.status !== "offline") ? "online" as const : "offline" as const };
         }));
       } catch (err) {
-        console.error("[AgentHub] Error fetching agents:", err);
         if (!cancelled) {
           setError(String(err));
           setDebug(`Error: ${err}`);
         }
       } finally {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     }
 
-    load();
+    loadData();
     return () => { cancelled = true; };
-  }, [gateways]);
+  }, [refreshCounter]);
 
-  // Show error state
+  const handleRefresh = () => {
+    setLoading(true);
+    setAgents([]);
+    setGateways([]);
+    setError(null);
+    setRefreshCounter(c => c + 1);
+  };
+
+  // Error state
   if (error) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center gap-4 p-6">
-        <div className="text-center">
-          <p className="text-[var(--smf-danger)] text-lg font-medium mb-2">Error Loading Agent Hub</p>
-          <p className="text-[var(--text-secondary)] text-sm">{error}</p>
-        </div>
-        <p className="text-xs text-[var(--text-muted)] font-mono">{debug}</p>
+        <p className="text-[var(--smf-danger)] text-lg font-medium">Error</p>
+        <p className="text-sm text-[var(--text-secondary)]">{error}</p>
+        <p className="text-xs text-[var(--text-muted)]">{debug}</p>
         <button
-          onClick={() => {
-            setLoading(true);
-            setError(null);
-            setGateways([...gateways]);
-          }}
-          className="rounded-lg bg-[var(--smf-primary)] px-4 py-2 text-sm font-medium text-white hover:opacity-90"
+          onClick={handleRefresh}
+          className="rounded-lg bg-[var(--smf-primary)] px-4 py-2 text-sm font-medium text-white"
         >
           Retry
         </button>
@@ -272,7 +268,7 @@ function AgentHubInner() {
     );
   }
 
-  // Show loading state
+  // Loading state
   if (loading) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center gap-4">
@@ -296,7 +292,7 @@ function AgentHubInner() {
             </p>
           </div>
           <button
-            onClick={() => setGateways([...gateways])}
+            onClick={handleRefresh}
             className="flex items-center gap-2 rounded-lg bg-[var(--bg-hover)] px-3 py-2 text-sm text-[var(--text-secondary)] hover:bg-[var(--border)]"
           >
             <RefreshIcon className="h-4 w-4" />
@@ -322,7 +318,7 @@ function AgentHubInner() {
         ))}
       </div>
 
-      {/* Tab Content */}
+      {/* Content */}
       <div className="p-6">
         {activeTab === "overview" && (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -337,8 +333,7 @@ function AgentHubInner() {
                 </div>
                 <div className="space-y-1 text-xs text-[var(--text-secondary)]">
                   <p>Role: {agent.role}</p>
-                  <p>Status: <span className={agent.status === "active" ? "text-green-400" : agent.status === "idle" ? "text-yellow-400" : "text-stone-400"}>{agent.status}</span></p>
-                  <p>Sessions: {agent.sessionCount}</p>
+                  <p>Status: {agent.status}</p>
                 </div>
               </div>
             ))}
@@ -359,19 +354,16 @@ function AgentHubInner() {
                   <div className="flex items-center gap-2 mb-3">
                     <span className={`w-2.5 h-2.5 rounded-full ${gw.status === "online" ? "bg-green-400" : "bg-stone-500"}`} />
                     <span className="font-medium text-[var(--text-primary)]">{gw.name}</span>
-                    <span className="text-xs text-[var(--text-muted)]">({gwAgents.length} agents)</span>
+                    <span className="text-xs text-[var(--text-muted)]">({gwAgents.length})</span>
                   </div>
                   <div className="space-y-2 ml-4">
                     {gwAgents.map(agent => (
                       <div key={agent.id} className="flex items-center gap-2 text-sm">
                         <span>{agent.emoji}</span>
                         <span className="text-[var(--text-primary)]">{agent.name}</span>
-                        <span className="text-xs text-[var(--text-muted)]">- {agent.model}</span>
                       </div>
                     ))}
-                    {gwAgents.length === 0 && (
-                      <p className="text-xs text-[var(--text-muted)] italic">No agents</p>
-                    )}
+                    {gwAgents.length === 0 && <p className="text-xs text-[var(--text-muted)]">No agents</p>}
                   </div>
                 </div>
               );
@@ -385,9 +377,7 @@ function AgentHubInner() {
               <div key={gw.id} className="rounded-lg border border-[var(--border)] p-4 bg-[var(--bg-card)]">
                 <div className="flex items-center justify-between mb-2">
                   <span className="font-medium text-[var(--text-primary)]">{gw.name}</span>
-                  <span className={`text-xs px-2 py-1 rounded ${
-                    gw.status === "online" ? "bg-green-500/20 text-green-400" : "bg-stone-500/20 text-stone-400"
-                  }`}>
+                  <span className={`text-xs px-2 py-1 rounded ${gw.status === "online" ? "bg-green-500/20 text-green-400" : "bg-stone-500/20 text-stone-400"}`}>
                     {gw.status}
                   </span>
                 </div>
