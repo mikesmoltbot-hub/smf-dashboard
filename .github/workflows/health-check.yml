@@ -1,0 +1,43 @@
+name: Health Check & Auto-Deploy
+
+on:
+  schedule:
+    # Every 5 minutes
+    - cron: "*/5 * * * *"
+  workflow_dispatch:  # Manual trigger
+
+jobs:
+  health-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check dashboard health
+        id: health
+        run: |
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" https://smf-dashboard.vercel.app/)
+          echo "Dashboard HTTP code: $HTTP_CODE"
+          if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "301" ] || [ "$HTTP_CODE" = "302" ]; then
+            echo "Dashboard is healthy"
+            echo "status=healthy" >> $GITHUB_OUTPUT
+          else
+            echo "Dashboard is DOWN (HTTP $HTTP_CODE)"
+            echo "status=down" >> $GITHUB_OUTPUT
+          fi
+
+  redeploy-if-down:
+    needs: health-check
+    if: needs.health-check.outputs.status == 'down'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Redeploy
+        run: |
+          npx vercel --prod --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Notify
+        run: |
+          curl -s -X POST "${{ secrets.DISCORD_WEBHOOK }}" \
+            -H "Content-Type: application/json" \
+            -d '{"content":"⚠️ smf-dashboard was down — auto-redeployed"}' \
+            || echo "No Discord webhook configured"
