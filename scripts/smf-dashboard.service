@@ -5,8 +5,8 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-User=__USER__
-WorkingDirectory=__DASHBOARD_DIR__
+User=mikesai1
+WorkingDirectory=/home/mikesai1/projects/smf-dashboard
 ExecStart=/bin/bash -lc 'npm run start'
 Restart=always
 RestartSec=5s
